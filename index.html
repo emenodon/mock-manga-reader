@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Manga List Terbaru</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Reset dan Base Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #e0e0e0;
+            line-height: 1.5;
+            padding: 0;
+            margin: 0;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        /* Container */
+        .container {
+            max-width: 100%;
+            padding: 15px;
+            margin: 0 auto;
+        }
+        
+        /* Header */
+        header {
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(10px);
+            padding: 15px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            text-align: center;
+        }
+        
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .logo i {
+            color: #ff6b6b;
+        }
+        
+        .subtitle {
+            font-size: 0.9rem;
+            color: #aaa;
+        }
+        
+        /* Loading dan Error */
+        .loading, .error, .empty {
+            text-align: center;
+            padding: 40px 20px;
+            display: none;
+        }
+        
+        .loading i {
+            font-size: 2.5rem;
+            color: #ff6b6b;
+            margin-bottom: 15px;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .error {
+            color: #ff6b6b;
+        }
+        
+        .empty i {
+            font-size: 3rem;
+            color: #666;
+            margin-bottom: 15px;
+        }
+        
+        /* Manga Grid */
+        .manga-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        /* Manga Card */
+        .manga-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        .manga-card:hover, .manga-card:focus {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.2);
+            background: rgba(255, 255, 255, 0.08);
+        }
+        
+        .manga-thumbnail {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            display: block;
+            background-color: #2d3748;
+        }
+        
+        .manga-info {
+            padding: 12px;
+        }
+        
+        .manga-title {
+            font-weight: 600;
+            font-size: 0.95rem;
+            margin-bottom: 8px;
+            color: #fff;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            height: 2.8em;
+        }
+        
+        .manga-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        
+        .manga-rating {
+            background: rgba(255, 193, 7, 0.2);
+            color: #ffc107;
+            font-size: 0.8rem;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-weight: 600;
+        }
+        
+        .manga-type {
+            background: rgba(33, 150, 243, 0.2);
+            color: #2196f3;
+            font-size: 0.75rem;
+            padding: 2px 8px;
+            border-radius: 10px;
+        }
+        
+        .latest-chapter {
+            font-size: 0.85rem;
+            color: #aaa;
+            display: -webkit-box;
+            -webkit-line-clamp: 1;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        
+        /* Pagination */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 30px 0;
+            gap: 10px;
+        }
+        
+        .pagination button {
+            background: rgba(255, 255, 255, 0.08);
+            border: none;
+            color: #e0e0e0;
+            padding: 10px 18px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        
+        .pagination button:hover:not(:disabled) {
+            background: rgba(255, 255, 255, 0.15);
+        }
+        
+        .pagination button:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+        
+        .page-info {
+            font-size: 0.9rem;
+            color: #aaa;
+        }
+        
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 20px;
+            color: #777;
+            font-size: 0.85rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            margin-top: 20px;
+        }
+        
+        /* Optimasi untuk HP Kentang */
+        @media (max-width: 480px) {
+            .manga-grid {
+                grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+                gap: 12px;
+            }
+            
+            .manga-thumbnail {
+                height: 180px;
+            }
+            
+            .container {
+                padding: 10px;
+            }
+            
+            header {
+                padding: 12px;
+            }
+            
+            .logo {
+                font-size: 1.5rem;
+            }
+        }
+        
+        @media (max-width: 360px) {
+            .manga-grid {
+                grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+                gap: 10px;
+            }
+            
+            .manga-thumbnail {
+                height: 160px;
+            }
+            
+            .manga-title {
+                font-size: 0.9rem;
+            }
+        }
+        
+        /* Animasi sederhana */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.5s ease forwards;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo">
+            <i class="fas fa-book-open"></i>
+            <span>Manga List</span>
+        </div>
+        <div class="subtitle">Daftar manga terbaru dari Komikcast</div>
+    </header>
+    
+    <main class="container">
+        <!-- Loading State -->
+        <div id="loading" class="loading">
+            <i class="fas fa-spinner"></i>
+            <p>Memuat manga terbaru...</p>
+        </div>
+        
+        <!-- Error State -->
+        <div id="error" class="error">
+            <i class="fas fa-exclamation-triangle"></i>
+            <p id="error-message">Gagal memuat data manga.</p>
+            <button id="retry-btn" style="margin-top: 15px; padding: 8px 20px; background: #ff6b6b; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                Coba Lagi
+            </button>
+        </div>
+        
+        <!-- Empty State -->
+        <div id="empty" class="empty">
+            <i class="fas fa-book"></i>
+            <p>Tidak ada manga yang ditemukan.</p>
+        </div>
+        
+        <!-- Manga Grid -->
+        <div id="manga-grid" class="manga-grid"></div>
+        
+        <!-- Pagination -->
+        <div id="pagination" class="pagination" style="display: none;">
+            <button id="prev-btn" disabled>
+                <i class="fas fa-chevron-left"></i> Sebelumnya
+            </button>
+            <div class="page-info">Halaman <span id="current-page">1</span></div>
+            <button id="next-btn">
+                Selanjutnya <i class="fas fa-chevron-right"></i>
+            </button>
+        </div>
+    </main>
+    
+    <footer>
+        <p>Data diambil dari Komikcast API • Dibuat untuk HP Kentang</p>
+        <p style="margin-top: 5px; font-size: 0.75rem;">© 2023 Manga List Viewer</p>
+    </footer>
+
+    <script>
+        // Konfigurasi
+        const API_URL = 'https://unofficial-komikcast-api.vercel.app/komikcast/latest';
+        let currentPage = 1;
+        
+        // Elemen DOM
+        const loadingEl = document.getElementById('loading');
+        const errorEl = document.getElementById('error');
+        const emptyEl = document.getElementById('empty');
+        const mangaGridEl = document.getElementById('manga-grid');
+        const paginationEl = document.getElementById('pagination');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const currentPageEl = document.getElementById('current-page');
+        const retryBtn = document.getElementById('retry-btn');
+        
+        // Fungsi untuk menampilkan/menyembunyikan elemen
+        function showElement(element) {
+            element.style.display = 'block';
+        }
+        
+        function hideElement(element) {
+            element.style.display = 'none';
+        }
+        
+        // Fungsi untuk mengambil data dari API
+        async function fetchManga(page = 1) {
+            showElement(loadingEl);
+            hideElement(errorEl);
+            hideElement(emptyEl);
+            hideElement(paginationEl);
+            mangaGridEl.innerHTML = '';
+            
+            try {
+                // Tambahkan parameter page ke URL jika diperlukan
+                const url = page > 1 ? `${API_URL}?page=${page}` : API_URL;
+                
+                const response = await fetch(url, {
+                    // Timeout untuk HP kentang (lebih pendek dari default)
+                    signal: AbortSignal.timeout(10000)
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                // Sembunyikan loading
+                hideElement(loadingEl);
+                
+                // Cek jika data kosong
+                if (!data.data || data.data.length === 0) {
+                    showElement(emptyEl);
+                    return;
+                }
+                
+                // Render manga
+                renderManga(data.data);
+                
+                // Update pagination
+                updatePagination(data.meta);
+                
+                // Scroll ke atas
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                
+            } catch (error) {
+                console.error('Error fetching manga:', error);
+                hideElement(loadingEl);
+                
+                // Tampilkan pesan error
+                document.getElementById('error-message').textContent = 
+                    error.name === 'TimeoutError' 
+                    ? 'Waktu permintaan habis. Periksa koneksi internet Anda.'
+                    : `Gagal memuat data: ${error.message}`;
+                
+                showElement(errorEl);
+            }
+        }
+        
+        // Fungsi untuk merender manga ke grid
+        function renderManga(mangaList) {
+            mangaGridEl.innerHTML = '';
+            
+            mangaList.forEach((manga, index) => {
+                const card = document.createElement('div');
+                card.className = 'manga-card fade-in';
+                card.style.animationDelay = `${index * 0.05}s`;
+                
+                // Gunakan placeholder jika thumbnail tidak ada
+                const thumbnail = manga.thumbnail || 'https://via.placeholder.com/150x200/2d3748/4a5568?text=No+Image';
+                
+                card.innerHTML = `
+                    <img src="${thumbnail}" alt="${manga.title}" class="manga-thumbnail" loading="lazy">
+                    <div class="manga-info">
+                        <h3 class="manga-title" title="${manga.title}">${manga.title}</h3>
+                        <div class="manga-meta">
+                            <div class="manga-rating">
+                                <i class="fas fa-star"></i> ${manga.rating || 'N/A'}
+                            </div>
+                            <div class="manga-type">${manga.type || 'Manga'}</div>
+                        </div>
+                        <div class="latest-chapter" title="${manga.latest_chapter?.title || 'Tidak diketahui'}">
+                            ${manga.latest_chapter?.title || 'Tidak diketahui'}
+                        </div>
+                    </div>
+                `;
+                
+                mangaGridEl.appendChild(card);
+            });
+        }
+        
+        // Fungsi untuk memperbarui pagination
+        function updatePagination(meta) {
+            if (!meta) {
+                hideElement(paginationEl);
+                return;
+            }
+            
+            currentPage = meta.page || 1;
+            currentPageEl.textContent = currentPage;
+            
+            // Enable/disable tombol berdasarkan halaman
+            prevBtn.disabled = !meta.prev_page;
+            nextBtn.disabled = !meta.next_page;
+            
+            showElement(paginationEl);
+        }
+        
+        // Event Listeners
+        prevBtn.addEventListener('click', () => {
+            if (currentPage > 1) {
+                fetchManga(currentPage - 1);
+            }
+        });
+        
+        nextBtn.addEventListener('click', () => {
+            fetchManga(currentPage + 1);
+        });
+        
+        retryBtn.addEventListener('click', () => {
+            fetchManga(currentPage);
+        });
+        
+        // Fetch data saat pertama kali load
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchManga();
+        });
+        
+        // Tambahkan timeout untuk fetch API
+        if (!AbortSignal.timeout) {
+            AbortSignal.timeout = function(ms) {
+                const controller = new AbortController();
+                setTimeout(() => controller.abort(new DOMException('TimeoutError', 'TimeoutError')), ms);
+                return controller.signal;
+            };
+        }
+        
+        // Optimasi gambar: lazy loading fallback
+        document.addEventListener('DOMContentLoaded', function() {
+            if ('loading' in HTMLImageElement.prototype) {
+                // Browser mendukung lazy loading native
+                const images = document.querySelectorAll('img[loading="lazy"]');
+                images.forEach(img => {
+                    img.src = img.dataset.src;
+                });
+            } else {
+                // Fallback untuk browser lama
+                const lazyImages = document.querySelectorAll('img[loading="lazy"]');
+                
+                const imageObserver = new IntersectionObserver((entries) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            const img = entry.target;
+                            img.src = img.dataset.src;
+                            imageObserver.unobserve(img);
+                        }
+                    });
+                });
+                
+                lazyImages.forEach(img => imageObserver.observe(img));
+            }
+        });
+    </script>
+</body>
+</html>
