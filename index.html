@@ -964,6 +964,77 @@
         `;
         document.head.appendChild(style);
         
+        // ========== LOCALSTORAGE FUNCTIONS ==========
+        
+        // Simpan data manga list ke localStorage
+        function saveMangaListToStorage(page, mangaList, meta) {
+            try {
+                const cacheData = {
+                    mangaList: mangaList,
+                    meta: meta,
+                    timestamp: Date.now(),
+                    page: page
+                };
+                localStorage.setItem('mangaListCache', JSON.stringify(cacheData));
+                console.log('Manga list saved to storage');
+            } catch (error) {
+                console.error('Error saving to localStorage:', error);
+            }
+        }
+        
+        // Ambil data manga list dari localStorage
+        function getMangaListFromStorage() {
+            try {
+                const cached = localStorage.getItem('mangaListCache');
+                if (!cached) return null;
+                
+                const data = JSON.parse(cached);
+                // Cek jika cache masih valid (10 menit)
+                if (Date.now() - data.timestamp > 10 * 60 * 1000) {
+                    localStorage.removeItem('mangaListCache');
+                    return null;
+                }
+                
+                return data;
+            } catch (error) {
+                console.error('Error reading from localStorage:', error);
+                return null;
+            }
+        }
+        
+        // Simpan detail manga ke localStorage
+        function saveMangaDetailToStorage(slug, mangaDetail) {
+            try {
+                const detailCache = {
+                    data: mangaDetail,
+                    timestamp: Date.now()
+                };
+                localStorage.setItem(`mangaDetail_${slug}`, JSON.stringify(detailCache));
+            } catch (error) {
+                console.error('Error saving manga detail to localStorage:', error);
+            }
+        }
+        
+        // Ambil detail manga dari localStorage
+        function getMangaDetailFromStorage(slug) {
+            try {
+                const cached = localStorage.getItem(`mangaDetail_${slug}`);
+                if (!cached) return null;
+                
+                const data = JSON.parse(cached);
+                // Cek jika cache masih valid (30 menit)
+                if (Date.now() - data.timestamp > 30 * 60 * 1000) {
+                    localStorage.removeItem(`mangaDetail_${slug}`);
+                    return null;
+                }
+                
+                return data.data;
+            } catch (error) {
+                console.error('Error reading manga detail from localStorage:', error);
+                return null;
+            }
+        }
+        
         // ========== FUNGSI UTILITAS ==========
         
         function showElement(element) {
@@ -998,7 +1069,7 @@
             backBtn.classList.remove('hidden');
             readerBackBtn.classList.add('hidden');
             
-            updateUrlHash(`manga-${currentMangaSlug}`);
+            updateUrlHash(`manga/${currentMangaSlug}`);
         }
         
         function showReaderView() {
@@ -1010,13 +1081,15 @@
             backBtn.classList.add('hidden');
             readerBackBtn.classList.remove('hidden');
             
-            updateUrlHash(`chapter-${currentChapterSlug}`);
+            updateUrlHash(`chapter/${currentChapterSlug}`);
         }
         
         function updateUrlHash(hash) {
-            if (history.pushState) {
+            try {
                 const newUrl = hash ? `#${hash}` : window.location.pathname;
-                history.pushState(null, '', newUrl);
+                history.pushState({ hash: hash }, '', newUrl);
+            } catch (error) {
+                console.error('Error updating URL:', error);
             }
         }
         
@@ -1107,12 +1180,24 @@
             }
         }
         
-        async function fetchManga(page = 1) {
+        async function fetchManga(page = 1, forceRefresh = false) {
             showElement(loadingEl);
             hideElement(errorEl);
             hideElement(emptyEl);
             hideElement(paginationEl);
-            mangaGridEl.innerHTML = '';
+            
+            // Cek cache terlebih dahulu jika tidak force refresh
+            if (!forceRefresh) {
+                const cachedData = getMangaListFromStorage();
+                if (cachedData && cachedData.page === page) {
+                    console.log('Loading manga list from cache');
+                    hideElement(loadingEl);
+                    renderMangaList(cachedData.mangaList);
+                    updatePagination(cachedData.meta);
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                    return;
+                }
+            }
             
             try {
                 const url = page > 1 ? `${LATEST_API}?page=${page}` : LATEST_API;
@@ -1128,6 +1213,9 @@
                     return;
                 }
                 
+                // Simpan ke cache
+                saveMangaListToStorage(page, data.data, data.meta);
+                
                 renderMangaList(data.data);
                 updatePagination(data.meta);
                 window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -1135,6 +1223,17 @@
             } catch (error) {
                 console.error('Error fetching manga:', error);
                 hideElement(loadingEl);
+                
+                // Jika gagal fetch dari API, coba load dari cache
+                if (!forceRefresh) {
+                    const cachedData = getMangaListFromStorage();
+                    if (cachedData) {
+                        console.log('Fallback to cached manga list');
+                        renderMangaList(cachedData.mangaList);
+                        updatePagination(cachedData.meta);
+                        return;
+                    }
+                }
                 
                 if (document.getElementById('error-message')) {
                     document.getElementById('error-message').textContent = 
@@ -1147,7 +1246,7 @@
             }
         }
         
-        async function fetchMangaDetail(slug) {
+        async function fetchMangaDetail(slug, forceRefresh = false) {
             showElement(detailLoadingEl);
             hideElement(detailErrorEl);
             if (detailContentEl) detailContentEl.innerHTML = '';
@@ -1155,6 +1254,23 @@
             currentMangaSlug = slug;
             logoTextEl.textContent = 'Loading...';
             subtitleEl.textContent = 'Mengambil detail manga';
+            
+            // Cek cache terlebih dahulu jika tidak force refresh
+            if (!forceRefresh) {
+                const cachedData = getMangaDetailFromStorage(slug);
+                if (cachedData) {
+                    console.log('Loading manga detail from cache');
+                    hideElement(detailLoadingEl);
+                    renderMangaDetail(cachedData);
+                    currentMangaTitle = cachedData.title || 'Unknown Manga';
+                    
+                    logoTextEl.textContent = cachedData.title || 'Detail Manga';
+                    subtitleEl.textContent = '';
+                    
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                    return;
+                }
+            }
             
             try {
                 const url = `${API_BASE}/komikcast/detail/${slug}`;
@@ -1164,6 +1280,9 @@
                 
                 const data = await response.json();
                 hideElement(detailLoadingEl);
+                
+                // Simpan ke cache
+                saveMangaDetailToStorage(slug, data.data);
                 
                 renderMangaDetail(data.data);
                 currentMangaTitle = data.data.title || 'Unknown Manga';
@@ -1176,6 +1295,20 @@
             } catch (error) {
                 console.error('Error fetching manga detail:', error);
                 hideElement(detailLoadingEl);
+                
+                // Jika gagal fetch dari API, coba load dari cache
+                if (!forceRefresh) {
+                    const cachedData = getMangaDetailFromStorage(slug);
+                    if (cachedData) {
+                        console.log('Fallback to cached manga detail');
+                        renderMangaDetail(cachedData);
+                        currentMangaTitle = cachedData.title || 'Unknown Manga';
+                        
+                        logoTextEl.textContent = cachedData.title || 'Detail Manga';
+                        subtitleEl.textContent = '';
+                        return;
+                    }
+                }
                 
                 if (document.getElementById('detail-error-message')) {
                     document.getElementById('detail-error-message').textContent = 
@@ -1247,7 +1380,16 @@
         // ========== RENDER FUNCTIONS ==========
         
         function renderMangaList(mangaList) {
+            if (!mangaGridEl) return;
+            
             mangaGridEl.innerHTML = '';
+            
+            if (!mangaList || mangaList.length === 0) {
+                showElement(emptyEl);
+                return;
+            }
+            
+            hideElement(emptyEl);
             
             mangaList.forEach((manga, index) => {
                 const card = document.createElement('div');
@@ -1282,6 +1424,8 @@
         }
         
         function renderMangaDetail(manga) {
+            if (!detailContentEl || !manga) return;
+            
             const thumbnail = manga.thumbnail || 'https://via.placeholder.com/250x350/2d3748/4a5568?text=No+Image';
             const rating = manga.rating || 'N/A';
             
@@ -1466,6 +1610,7 @@
         }
         
         function showChapter(chapterSlug) {
+            currentChapterSlug = chapterSlug;
             showReaderView();
             fetchChapterImages(chapterSlug);
         }
@@ -1503,6 +1648,49 @@
             showElement(paginationEl);
         }
         
+        // ========== URL ROUTING ==========
+        
+        function parseHashRoute() {
+            const hash = window.location.hash;
+            
+            if (!hash) {
+                showListView();
+                const cachedData = getMangaListFromStorage();
+                if (cachedData && cachedData.mangaList) {
+                    renderMangaList(cachedData.mangaList);
+                    updatePagination(cachedData.meta);
+                } else {
+                    fetchManga();
+                }
+                return;
+            }
+            
+            // Format hash: #manga/{slug} atau #chapter/{slug}
+            const parts = hash.substring(1).split('/');
+            
+            if (parts.length < 2) {
+                showListView();
+                fetchManga();
+                return;
+            }
+            
+            const type = parts[0];
+            const slug = parts[1];
+            
+            if (type === 'manga') {
+                currentMangaSlug = slug;
+                showDetailView();
+                fetchMangaDetail(slug);
+            } else if (type === 'chapter') {
+                currentChapterSlug = slug;
+                showReaderView();
+                fetchChapterImages(slug);
+            } else {
+                showListView();
+                fetchManga();
+            }
+        }
+        
         // ========== EVENT LISTENERS ==========
         
         // Navigation
@@ -1522,14 +1710,14 @@
         
         if (retryBtn) {
             retryBtn.addEventListener('click', () => {
-                fetchManga(currentPage);
+                fetchManga(currentPage, true); // Force refresh
             });
         }
         
         if (detailRetryBtn) {
             detailRetryBtn.addEventListener('click', () => {
                 if (currentMangaSlug) {
-                    fetchMangaDetail(currentMangaSlug);
+                    fetchMangaDetail(currentMangaSlug, true); // Force refresh
                 }
             });
         }
@@ -1550,7 +1738,12 @@
         
         if (readerBackBtn) {
             readerBackBtn.addEventListener('click', () => {
-                showDetailView();
+                if (currentMangaSlug) {
+                    showDetailView();
+                    fetchMangaDetail(currentMangaSlug);
+                } else {
+                    showListView();
+                }
             });
         }
         
@@ -1578,22 +1771,8 @@
         }
         
         // Browser history
-        window.addEventListener('popstate', () => {
-            const hash = window.location.hash;
-            
-            if (!hash) {
-                showListView();
-            } else if (hash.startsWith('#manga-')) {
-                const slug = hash.replace('#manga-', '');
-                currentMangaSlug = slug;
-                showDetailView();
-                fetchMangaDetail(slug);
-            } else if (hash.startsWith('#chapter-')) {
-                const slug = hash.replace('#chapter-', '');
-                currentChapterSlug = slug;
-                showReaderView();
-                fetchChapterImages(slug);
-            }
+        window.addEventListener('popstate', (event) => {
+            parseHashRoute();
         });
         
         // Keyboard shortcuts
@@ -1604,7 +1783,10 @@
                 } else if (e.key === 'ArrowRight' && nextChapterBtn && !nextChapterBtn.disabled) {
                     goToNextChapter();
                 } else if (e.key === 'Escape') {
-                    showDetailView();
+                    if (currentMangaSlug) {
+                        showDetailView();
+                        fetchMangaDetail(currentMangaSlug);
+                    }
                 }
             }
         });
@@ -1635,20 +1817,26 @@
         // ========== INITIALIZE ==========
         
         document.addEventListener('DOMContentLoaded', () => {
-            const hash = window.location.hash;
+            // Tampilkan data dari cache terlebih dahulu untuk loading cepat
+            const cachedData = getMangaListFromStorage();
+            if (cachedData && cachedData.mangaList) {
+                renderMangaList(cachedData.mangaList);
+                updatePagination(cachedData.meta);
+            }
             
-            if (hash.startsWith('#chapter-')) {
-                const slug = hash.replace('#chapter-', '');
-                currentChapterSlug = slug;
-                showReaderView();
-                fetchChapterImages(slug);
-            } else if (hash.startsWith('#manga-')) {
-                const slug = hash.replace('#manga-', '');
-                currentMangaSlug = slug;
-                showDetailView();
-                fetchMangaDetail(slug);
-            } else {
-                fetchManga();
+            // Parse URL hash untuk routing
+            parseHashRoute();
+        });
+        
+        // Handle page visibility change (tab switching)
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden && currentView === 'list') {
+                // Refresh cache ketika kembali ke tab
+                const cachedData = getMangaListFromStorage();
+                if (cachedData && cachedData.mangaList) {
+                    renderMangaList(cachedData.mangaList);
+                    updatePagination(cachedData.meta);
+                }
             }
         });
     </script>
