@@ -846,8 +846,7 @@
     </div>
     
     <footer>
-        <p>Data diambil dari Komikcast API • Dibuat untuk HP Kentang</p>
-        <p style="margin-top: 5px; font-size: 0.7rem;">© 2023 Manga List Viewer</p>
+        <p style="margin-top: 5px; font-size: 0.7rem;">© 2025 Manga List Viewer</p>
     </footer>
 
     <script>
@@ -1050,11 +1049,15 @@
         
         function updateProgress() {
             const progress = Math.round((loadedImagesCount / totalImagesCount) * 100);
-            readingProgressEl.style.width = `${progress}%`;
-            readerProgressText.textContent = `Memuat gambar (${loadedImagesCount}/${totalImagesCount})`;
-            
-            if (loadedImagesCount === totalImagesCount) {
-                readerProgressText.textContent = `Selesai memuat ${totalImagesCount} gambar`;
+            if (readingProgressEl) {
+                readingProgressEl.style.width = `${progress}%`;
+            }
+            if (readerProgressText) {
+                readerProgressText.textContent = `Memuat gambar (${loadedImagesCount}/${totalImagesCount})`;
+                
+                if (loadedImagesCount === totalImagesCount) {
+                    readerProgressText.textContent = `Selesai memuat ${totalImagesCount} gambar`;
+                }
             }
         }
         
@@ -1103,10 +1106,12 @@
                 console.error('Error fetching manga:', error);
                 hideElement(loadingEl);
                 
-                document.getElementById('error-message').textContent = 
-                    error.name === 'AbortError' 
-                    ? 'Waktu permintaan habis. Periksa koneksi internet Anda.'
-                    : `Gagal memuat data: ${error.message}`;
+                if (document.getElementById('error-message')) {
+                    document.getElementById('error-message').textContent = 
+                        error.name === 'AbortError' 
+                        ? 'Waktu permintaan habis. Periksa koneksi internet Anda.'
+                        : `Gagal memuat data: ${error.message}`;
+                }
                 
                 showElement(errorEl);
             }
@@ -1115,7 +1120,7 @@
         async function fetchMangaDetail(slug) {
             showElement(detailLoadingEl);
             hideElement(detailErrorEl);
-            detailContentEl.innerHTML = '';
+            if (detailContentEl) detailContentEl.innerHTML = '';
             
             currentMangaSlug = slug;
             logoTextEl.textContent = 'Loading...';
@@ -1142,10 +1147,12 @@
                 console.error('Error fetching manga detail:', error);
                 hideElement(detailLoadingEl);
                 
-                document.getElementById('detail-error-message').textContent = 
-                    error.name === 'AbortError' 
-                    ? 'Waktu permintaan habis. Periksa koneksi internet Anda.'
-                    : `Gagal memuat detail manga: ${error.message}`;
+                if (document.getElementById('detail-error-message')) {
+                    document.getElementById('detail-error-message').textContent = 
+                        error.name === 'AbortError' 
+                        ? 'Waktu permintaan habis. Periksa koneksi internet Anda.'
+                        : `Gagal memuat detail manga: ${error.message}`;
+                }
                 
                 showElement(detailErrorEl);
                 logoTextEl.textContent = 'Error';
@@ -1157,12 +1164,17 @@
             showElement(readerLoadingEl);
             hideElement(readerErrorEl);
             hideElement(readerContentEl);
-            chapterImagesEl.innerHTML = '';
+            if (chapterImagesEl) chapterImagesEl.innerHTML = '';
             
             currentChapterSlug = slug;
-            chapterTitleEl.textContent = 'Memuat...';
-            readerProgressText.textContent = 'Memuat gambar...';
-            readingProgressEl.style.width = '0%';
+            
+            // Perbaikan: Cek elemen sebelum mengaksesnya
+            if (readerProgressText) {
+                readerProgressText.textContent = 'Memuat gambar...';
+            }
+            if (readingProgressEl) {
+                readingProgressEl.style.width = '0%';
+            }
             
             try {
                 const url = `${API_BASE}/komikcast/chapter/${slug}`;
@@ -1179,7 +1191,7 @@
                 renderChapterImages(data.data);
                 updateChapterNavigation(data.data);
                 
-                chapterTitleEl.textContent = data.data.title || 'Chapter';
+                // Perbaikan: Update judul di header, bukan di chapterTitleEl yang tidak ada
                 logoTextEl.textContent = currentMangaTitle || 'Manga Reader';
                 subtitleEl.textContent = data.data.title || 'Membaca chapter';
                 
@@ -1189,13 +1201,14 @@
                 console.error('Error fetching chapter:', error);
                 hideElement(readerLoadingEl);
                 
-                document.getElementById('reader-error-message').textContent = 
-                    error.name === 'AbortError' 
-                    ? 'Waktu permintaan habis. Periksa koneksi internet Anda.'
-                    : `Gagal memuat chapter: ${error.message}`;
+                if (document.getElementById('reader-error-message')) {
+                    document.getElementById('reader-error-message').textContent = 
+                        error.name === 'AbortError' 
+                        ? 'Waktu permintaan habis. Periksa koneksi internet Anda.'
+                        : `Gagal memuat chapter: ${error.message}`;
+                }
                 
                 showElement(readerErrorEl);
-                chapterTitleEl.textContent = 'Error';
                 logoTextEl.textContent = 'Error';
                 subtitleEl.textContent = 'Gagal memuat chapter';
             }
@@ -1348,6 +1361,8 @@
         }
         
         function renderChapterImages(chapterData) {
+            if (!chapterImagesEl) return;
+            
             chapterImagesEl.innerHTML = '';
             
             if (!chapterData.images || chapterData.images.length === 0) {
@@ -1357,16 +1372,23 @@
                             <i class="fas fa-image" style="font-size: 2.5rem; margin-bottom: 15px; display: block;"></i>
                             Tidak ada gambar yang tersedia untuk chapter ini.
                         </p>
+                    </div>
                 `;
-                readerProgressText.textContent = 'Tidak ada gambar';
-                readingProgressEl.style.width = '100%';
+                if (readerProgressText) {
+                    readerProgressText.textContent = 'Tidak ada gambar';
+                }
+                if (readingProgressEl) {
+                    readingProgressEl.style.width = '100%';
+                }
                 return;
             }
             
             totalImagesCount = chapterData.images.length;
             loadedImagesCount = 0;
             
-            readerProgressText.textContent = `Memuat gambar (0/${totalImagesCount})`;
+            if (readerProgressText) {
+                readerProgressText.textContent = `Memuat gambar (0/${totalImagesCount})`;
+            }
             initLazyLoading();
             
             // Create image containers dengan data-src untuk lazy loading
@@ -1389,12 +1411,14 @@
                 
                 // Observasi gambar untuk lazy loading
                 const img = container.querySelector('img');
-                imageObserver.observe(img);
+                if (img && imageObserver) {
+                    imageObserver.observe(img);
+                }
             });
             
             // Pre-load 3 gambar pertama untuk UX yang lebih baik
             const firstImages = chapterImagesEl.querySelectorAll('img');
-            for (let i = 0; i < Math.min(3, firstImages.length); i++) {
+            for (let i = 0; i < Math.min(2, firstImages.length); i++) {
                 loadImage(firstImages[i]);
             }
         }
@@ -1405,10 +1429,10 @@
             const hasPrevChapter = chapterData.previous_chapter_slug && chapterData.previous_chapter_slug !== '';
             const hasNextChapter = chapterData.next_chapter_slug && chapterData.next_chapter_slug !== '';
             
-            prevChapterBtn.disabled = !hasPrevChapter;
-            prevChapterBtnBottom.disabled = !hasPrevChapter;
-            nextChapterBtn.disabled = !hasNextChapter;
-            nextChapterBtnBottom.disabled = !hasNextChapter;
+            if (prevChapterBtn) prevChapterBtn.disabled = !hasPrevChapter;
+            if (prevChapterBtnBottom) prevChapterBtnBottom.disabled = !hasPrevChapter;
+            if (nextChapterBtn) nextChapterBtn.disabled = !hasNextChapter;
+            if (nextChapterBtnBottom) nextChapterBtnBottom.disabled = !hasNextChapter;
         }
         
         function showChapter(chapterSlug) {
@@ -1435,16 +1459,16 @@
         }
         
         function updatePagination(meta) {
-            if (!meta) {
-                hideElement(paginationEl);
+            if (!meta || !paginationEl) {
+                if (paginationEl) hideElement(paginationEl);
                 return;
             }
             
             currentPage = meta.page || 1;
-            currentPageEl.textContent = currentPage;
+            if (currentPageEl) currentPageEl.textContent = currentPage;
             
-            prevBtn.disabled = !meta.prev_page;
-            nextBtn.disabled = !meta.next_page;
+            if (prevBtn) prevBtn.disabled = !meta.prev_page;
+            if (nextBtn) nextBtn.disabled = !meta.next_page;
             
             showElement(paginationEl);
         }
@@ -1452,49 +1476,76 @@
         // ========== EVENT LISTENERS ==========
         
         // Navigation
-        prevBtn.addEventListener('click', () => {
-            if (currentPage > 1) {
-                fetchManga(currentPage - 1);
-            }
-        });
+        if (prevBtn) {
+            prevBtn.addEventListener('click', () => {
+                if (currentPage > 1) {
+                    fetchManga(currentPage - 1);
+                }
+            });
+        }
         
-        nextBtn.addEventListener('click', () => {
-            fetchManga(currentPage + 1);
-        });
+        if (nextBtn) {
+            nextBtn.addEventListener('click', () => {
+                fetchManga(currentPage + 1);
+            });
+        }
         
-        retryBtn.addEventListener('click', () => {
-            fetchManga(currentPage);
-        });
+        if (retryBtn) {
+            retryBtn.addEventListener('click', () => {
+                fetchManga(currentPage);
+            });
+        }
         
-        detailRetryBtn.addEventListener('click', () => {
-            if (currentMangaSlug) {
-                fetchMangaDetail(currentMangaSlug);
-            }
-        });
+        if (detailRetryBtn) {
+            detailRetryBtn.addEventListener('click', () => {
+                if (currentMangaSlug) {
+                    fetchMangaDetail(currentMangaSlug);
+                }
+            });
+        }
         
-        readerRetryBtn.addEventListener('click', () => {
-            if (currentChapterSlug) {
-                fetchChapterImages(currentChapterSlug);
-            }
-        });
+        if (readerRetryBtn) {
+            readerRetryBtn.addEventListener('click', () => {
+                if (currentChapterSlug) {
+                    fetchChapterImages(currentChapterSlug);
+                }
+            });
+        }
         
-        backBtn.addEventListener('click', () => {
-            showListView();
-        });
+        if (backBtn) {
+            backBtn.addEventListener('click', () => {
+                showListView();
+            });
+        }
         
-        readerBackBtn.addEventListener('click', () => {
-            showDetailView();
-        });
+        if (readerBackBtn) {
+            readerBackBtn.addEventListener('click', () => {
+                showDetailView();
+            });
+        }
         
-        logoBtn.addEventListener('click', () => {
-            showListView();
-        });
+        if (logoBtn) {
+            logoBtn.addEventListener('click', () => {
+                showListView();
+            });
+        }
         
         // Chapter navigation
-        prevChapterBtn.addEventListener('click', goToPrevChapter);
-        nextChapterBtn.addEventListener('click', goToNextChapter);
-        prevChapterBtnBottom.addEventListener('click', goToPrevChapter);
-        nextChapterBtnBottom.addEventListener('click', goToNextChapter);
+        if (prevChapterBtn) {
+            prevChapterBtn.addEventListener('click', goToPrevChapter);
+        }
+        
+        if (nextChapterBtn) {
+            nextChapterBtn.addEventListener('click', goToNextChapter);
+        }
+        
+        if (prevChapterBtnBottom) {
+            prevChapterBtnBottom.addEventListener('click', goToPrevChapter);
+        }
+        
+        if (nextChapterBtnBottom) {
+            nextChapterBtnBottom.addEventListener('click', goToNextChapter);
+        }
         
         // Browser history
         window.addEventListener('popstate', () => {
@@ -1518,9 +1569,9 @@
         // Keyboard shortcuts
         document.addEventListener('keydown', (e) => {
             if (currentView === 'reader') {
-                if (e.key === 'ArrowLeft' && !prevChapterBtn.disabled) {
+                if (e.key === 'ArrowLeft' && prevChapterBtn && !prevChapterBtn.disabled) {
                     goToPrevChapter();
-                } else if (e.key === 'ArrowRight' && !nextChapterBtn.disabled) {
+                } else if (e.key === 'ArrowRight' && nextChapterBtn && !nextChapterBtn.disabled) {
                     goToNextChapter();
                 } else if (e.key === 'Escape') {
                     showDetailView();
@@ -1543,9 +1594,9 @@
                 const diff = touchStartX - touchEndX;
                 const swipeThreshold = 50;
                 
-                if (diff > swipeThreshold && !nextChapterBtn.disabled) {
+                if (diff > swipeThreshold && nextChapterBtn && !nextChapterBtn.disabled) {
                     goToNextChapter();
-                } else if (diff < -swipeThreshold && !prevChapterBtn.disabled) {
+                } else if (diff < -swipeThreshold && prevChapterBtn && !prevChapterBtn.disabled) {
                     goToPrevChapter();
                 }
             }
