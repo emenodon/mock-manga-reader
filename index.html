@@ -388,7 +388,6 @@
             padding: 10px;
             border-radius: 8px;
             margin-bottom: 15px;
-            position: sticky;
             top: 55px;
             z-index: 90;
         }
@@ -455,17 +454,14 @@
         .chapter-images {
             display: flex;
             flex-direction: column;
-            gap: 4px;
             margin-bottom: 20px;
         }
         
         .chapter-image-container {
             position: relative;
             width: 100%;
-            margin-bottom: 4px;
             min-height: 80px;
             background: linear-gradient(45deg, #2d3748, #4a5568);
-            border-radius: 6px;
             overflow: hidden;
         }
         
@@ -520,7 +516,7 @@
         
         /* Pagination - SATU BARIS */
         .pagination {
-            display: flex;
+            display: flex !important;
             justify-content: space-between;
             align-items: center;
             margin: 20px 0;
@@ -822,20 +818,13 @@
         
         <!-- Reader Content -->
         <div id="reader-content" class="reader-container" style="display: none;">
-            <div class="reader-header">
-                <h1 class="reader-title" id="chapter-title">Chapter Title</h1>
-                <div class="progress-bar">
-                    <div class="progress-fill" id="reading-progress"></div>
-                </div>
-                <!-- Reader Controls SATU BARIS -->
-                <div class="reader-controls">
-                    <button id="prev-chapter-btn" class="reader-btn" disabled>
-                        <i class="fas fa-chevron-left"></i> <span class="btn-text">Prev</span>
-                    </button>
-                    <button id="next-chapter-btn" class="reader-btn primary">
-                        <span class="btn-text">Next</span> <i class="fas fa-chevron-right"></i>
-                    </button>
-                </div>
+            <div class="reader-controls" style="margin-bottom: 15px;">
+                <button id="prev-chapter-btn" class="reader-btn" disabled>
+                    <i class="fas fa-chevron-left"></i> <span class="btn-text">Prev</span>
+                </button>
+                <button id="next-chapter-btn" class="reader-btn primary">
+                    <span class="btn-text">Next</span> <i class="fas fa-chevron-right"></i>
+                </button>
             </div>
             
             <div id="chapter-images" class="chapter-images"></div>
@@ -1264,12 +1253,21 @@
             
             let chaptersHtml = '';
             if (manga.chapters && manga.chapters.length > 0) {
-                // URUTKAN DESCENDING (chapter terbaru di atas)
+                // URUTKAN DESCENDING berdasarkan nomor chapter
                 const sortedChapters = [...manga.chapters].sort((a, b) => {
-                    // Urutkan berdasarkan tanggal rilis descending
-                    const dateA = new Date(a.released_at || 0);
-                    const dateB = new Date(b.released_at || 0);
-                    return dateB - dateA;
+                    // Ekstrak angka dari judul chapter
+                    const getChapterNumber = (title) => {
+                        if (!title) return 0;
+                        // Cari angka dalam judul chapter
+                        const match = title.match(/(\d+(\.\d+)?)/);
+                        return match ? parseFloat(match[1]) : 0;
+                    };
+                    
+                    const numA = getChapterNumber(a.title);
+                    const numB = getChapterNumber(b.title);
+                    
+                    // Urutkan descending (terbaru/tertinggi di atas)
+                    return numB - numA;
                 });
                 
                 chaptersHtml = sortedChapters.map(chapter => {
@@ -1359,7 +1357,6 @@
                             <i class="fas fa-image" style="font-size: 2.5rem; margin-bottom: 15px; display: block;"></i>
                             Tidak ada gambar yang tersedia untuk chapter ini.
                         </p>
-                    </div>
                 `;
                 readerProgressText.textContent = 'Tidak ada gambar';
                 readingProgressEl.style.width = '100%';
