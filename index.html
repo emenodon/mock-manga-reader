@@ -6,7 +6,6 @@
     <title>Manga List Terbaru</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* Reset dan Base Styles */
         * {
             margin: 0;
             padding: 0;
@@ -25,14 +24,12 @@
             overflow-x: hidden;
         }
         
-        /* Container */
         .container {
             max-width: 100%;
             padding: 10px;
             margin: 0 auto;
         }
         
-        /* Header - DIPERKECIL */
         header {
             background: rgba(0, 0, 0, 0.4);
             backdrop-filter: blur(10px);
@@ -106,7 +103,6 @@
             overflow: hidden;
         }
         
-        /* Loading dan Error */
         .loading, .error, .empty {
             text-align: center;
             padding: 40px 20px;
@@ -135,8 +131,6 @@
             margin-bottom: 15px;
         }
         
-        /* Manga Grid - Halaman Utama */
-        /* Desktop/Laptop: 4-5 kolom */
         .manga-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
@@ -144,7 +138,6 @@
             margin-top: 15px;
         }
         
-        /* Tablet: 3 kolom */
         @media (max-width: 900px) {
             .manga-grid {
                 grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
@@ -152,15 +145,14 @@
             }
         }
         
-        /* Mobile (500px kebawah): 2 KOLOM */
         @media (max-width: 500px) {
             .manga-grid {
-                grid-template-columns: repeat(2, 1fr); /* 2 kolom tetap */
+                grid-template-columns: repeat(2, 1fr);
                 gap: 10px;
             }
             
             .manga-thumbnail {
-                height: 190px; /* Lebih tinggi untuk 2 kolom */
+                height: 190px;
             }
             
             .manga-info {
@@ -182,7 +174,6 @@
             }
         }
         
-        /* Mobile kecil: 2 kolom dengan ukuran lebih kecil */
         @media (max-width: 360px) {
             .manga-grid {
                 grid-template-columns: repeat(2, 1fr);
@@ -198,7 +189,6 @@
             }
         }
         
-        /* Manga Card */
         .manga-card {
             background: rgba(255, 255, 255, 0.05);
             border-radius: 10px;
@@ -272,7 +262,6 @@
             overflow: hidden;
         }
         
-        /* Halaman Detail Manga */
         #detail-page {
             display: none;
         }
@@ -374,7 +363,6 @@
             font-size: 1.1rem;
         }
         
-        /* Chapters List */
         .chapters-section {
             margin-top: 20px;
         }
@@ -427,7 +415,6 @@
             margin-left: 10px;
         }
         
-        /* Halaman Reader Chapter */
         #reader-page {
             display: none;
         }
@@ -459,7 +446,6 @@
             text-overflow: ellipsis;
         }
         
-        /* Reader Controls - SATU BARIS */
         .reader-controls {
             display: flex;
             justify-content: space-between;
@@ -506,7 +492,6 @@
             background: rgba(255, 107, 107, 0.3);
         }
         
-        /* Chapter Images */
         .chapter-images {
             display: flex;
             flex-direction: column;
@@ -552,7 +537,6 @@
             font-size: 0.8rem;
         }
         
-        /* Progress Bar */
         .progress-bar {
             width: 100%;
             height: 3px;
@@ -570,7 +554,6 @@
             transition: width 0.3s ease;
         }
         
-        /* Pagination - SATU BARIS */
         .pagination {
             display: flex !important;
             justify-content: space-between;
@@ -615,8 +598,40 @@
             min-width: 80px;
             text-align: center;
         }
+
+        #logo-text {
+            display: -webkit-box;
+            -webkit-box-orient: vertical;
+            -webkit-line-clamp: 2;
+            overflow: hidden;
+            line-height: 1.2;
+            max-height: 2.4em;
+            font-weight: 700;
+            color: #fff;
+            text-overflow: ellipsis;
+            word-break: break-word;
+            hyphens: auto;
+            height: auto;
+            min-height: 20px;
+        }
+
+        @supports not (-webkit-line-clamp: 2) {
+            #logo-text {
+                max-height: 2.4em;
+                overflow: hidden;
+                position: relative;
+            }
+            
+            #logo-text::after {
+                content: '...';
+                position: absolute;
+                bottom: 0;
+                right: 0;
+                padding-left: 4px;
+                background: linear-gradient(to right, transparent, #1a1a2e 30%);
+            }
+        }
         
-        /* Footer */
         footer {
             text-align: center;
             padding: 15px;
@@ -626,7 +641,6 @@
             margin-top: 15px;
         }
         
-        /* Optimasi untuk HP Kentang - Mobile di bawah 500px */
         @media (max-width: 500px) {
             .container {
                 padding: 8px;
@@ -669,14 +683,6 @@
                 padding: 4px 8px;
                 font-size: 0.75rem;
             }
-            
-            .nav-btn .btn-text {
-                display: none;
-            }
-            
-            .nav-btn i {
-                margin: 0;
-            }
         }
         
         @media (max-width: 360px) {
@@ -695,7 +701,6 @@
             }
         }
         
-        /* Animasi sederhana */
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
@@ -715,7 +720,6 @@
             animation: pulse 1.5s ease-in-out infinite;
         }
         
-        /* Utilitas */
         .hidden {
             display: none !important;
         }
@@ -728,7 +732,6 @@
             margin-top: 15px;
         }
         
-        /* Scrollbar styling */
         .chapters-list::-webkit-scrollbar {
             width: 6px;
         }
@@ -746,10 +749,301 @@
         .chapters-list::-webkit-scrollbar-thumb:hover {
             background: rgba(255, 255, 255, 0.3);
         }
+        
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            z-index: 1000;
+            padding-top: 60px;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .modal.hidden {
+            display: none;
+        }
+        
+        .modal-content {
+            background: #1a1a2e;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            animation: slideDown 0.3s ease;
+        }
+        
+        @keyframes slideDown {
+            from {
+                transform: translateY(-20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(0, 0, 0, 0.2);
+        }
+        
+        .modal-header h3 {
+            color: #fff;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .close-btn {
+            background: none;
+            border: none;
+            color: #aaa;
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.2s;
+        }
+        
+        .close-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+        }
+        
+        .modal-body {
+            padding: 20px;
+            overflow-y: auto;
+            max-height: calc(80vh - 70px);
+        }
+        
+        .search-input-container {
+            position: relative;
+            margin-bottom: 20px;
+        }
+        
+        .search-icon {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #666;
+            font-size: 1rem;
+        }
+        
+        #search-input {
+            width: 100%;
+            padding: 12px 45px 12px 40px;
+            background: rgba(255, 255, 255, 0.07);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            color: #fff;
+            font-size: 0.95rem;
+            transition: all 0.3s;
+        }
+        
+        #search-input:focus {
+            outline: none;
+            border-color: #ff6b6b;
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        #search-input::placeholder {
+            color: #777;
+        }
+        
+        .clear-btn {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: #aaa;
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: all 0.2s;
+        }
+        
+        .clear-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            color: #fff;
+        }
+        
+        .search-results {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .search-result-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid transparent;
+        }
+        
+        .search-result-item:hover {
+            background: rgba(255, 255, 255, 0.07);
+            border-color: rgba(255, 255, 255, 0.1);
+            transform: translateY(-1px);
+        }
+        
+        .search-result-thumbnail {
+            width: 60px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 5px;
+            flex-shrink: 0;
+        }
+        
+        .search-result-info {
+            flex: 1;
+            min-width: 0;
+        }
+        
+        .search-result-title {
+            font-weight: 600;
+            color: #fff;
+            font-size: 0.95rem;
+            margin-bottom: 5px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        
+        .search-result-meta {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+        
+        .search-result-rating {
+            background: rgba(255, 193, 7, 0.2);
+            color: #ffc107;
+            font-size: 0.75rem;
+            padding: 2px 6px;
+            border-radius: 6px;
+            font-weight: 600;
+        }
+        
+        .search-result-type {
+            background: rgba(33, 150, 243, 0.2);
+            color: #2196f3;
+            font-size: 0.7rem;
+            padding: 2px 6px;
+            border-radius: 6px;
+        }
+        
+        .search-result-chapter {
+            font-size: 0.8rem;
+            color: #aaa;
+            display: -webkit-box;
+            -webkit-line-clamp: 1;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        
+        #search-loading,
+        #search-error,
+        #search-empty {
+            padding: 20px;
+            text-align: center;
+        }
+        
+        #search-loading .fas,
+        #search-error .fas,
+        #search-empty .fas {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+        }
+        
+        @media (max-width: 500px) {
+            .modal {
+                padding-top: 50px;
+            }
+            
+            .modal-content {
+                width: 95%;
+                max-height: 85vh;
+            }
+            
+            .modal-body {
+                max-height: calc(85vh - 70px);
+            }
+            
+            .search-result-item {
+                padding: 10px;
+            }
+            
+            .search-result-thumbnail {
+                width: 50px;
+                height: 70px;
+            }
+            
+            .search-result-title {
+                font-size: 0.9rem;
+            }
+            
+            .nav-btn .btn-text {
+                display: none;
+            }
+            
+            .nav-btn i {
+                margin: 0;
+            }
+        }
+        
+        @media (max-width: 360px) {
+            .search-result-thumbnail {
+                width: 45px;
+                height: 65px;
+            }
+            
+            .modal-header {
+                padding: 12px 15px;
+            }
+            
+            .modal-body {
+                padding: 15px;
+            }
+        }
     </style>
 </head>
 <body>
-    <!-- Header -->
     <header>
         <div class="header-content">
             <div>
@@ -760,6 +1054,9 @@
                 <div class="subtitle" id="subtitle">Daftar manga terbaru dari Komikcast</div>
             </div>
             <div class="nav-buttons">
+                <button id="search-toggle-btn" class="nav-btn">
+                    <i class="fas fa-search"></i> <span class="btn-text">Search</span>
+                </button>
                 <button id="back-btn" class="nav-btn hidden">
                     <i class="fas fa-arrow-left"></i> <span class="btn-text">Kembali</span>
                 </button>
@@ -769,16 +1066,59 @@
             </div>
         </div>
     </header>
+
+    <div id="search-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-search"></i> Search Manga</h3>
+                <button id="close-search-btn" class="close-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="search-input-container">
+                    <i class="fas fa-search search-icon"></i>
+                    <input 
+                        type="text" 
+                        id="search-input" 
+                        placeholder="Search manga by title or keywords..."
+                        autocomplete="off"
+                    >
+                    <button id="clear-search-btn" class="clear-btn hidden">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div id="search-loading" class="loading hidden">
+                    <i class="fas fa-spinner"></i>
+                    <p>Searching...</p>
+                </div>
+                <div id="search-error" class="error hidden">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <p id="search-error-message">Failed to search</p>
+                </div>
+                <div id="search-empty" class="empty hidden">
+                    <i class="fas fa-search"></i>
+                    <p>No manga found</p>
+                </div>
+                <div id="search-results" class="search-results"></div>
+                
+                <div id="search-pagination" class="pagination hidden">
+                    <button id="search-prev-btn" disabled>
+                        <i class="fas fa-chevron-left"></i> Previous
+                    </button>
+                    <div class="page-info">Page <span id="search-current-page">1</span></div>
+                    <button id="search-next-btn">
+                        Next <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
     
-    <!-- Halaman Utama (Daftar Manga) -->
     <main class="container" id="main-page">
-        <!-- Loading State -->
         <div id="loading" class="loading">
             <i class="fas fa-spinner"></i>
             <p>Memuat manga terbaru...</p>
         </div>
         
-        <!-- Error State -->
         <div id="error" class="error">
             <i class="fas fa-exclamation-triangle"></i>
             <p id="error-message">Gagal memuat data manga.</p>
@@ -787,16 +1127,13 @@
             </button>
         </div>
         
-        <!-- Empty State -->
         <div id="empty" class="empty">
             <i class="fas fa-book"></i>
             <p>Tidak ada manga yang ditemukan.</p>
         </div>
         
-        <!-- Manga Grid -->
         <div id="manga-grid" class="manga-grid"></div>
         
-        <!-- Pagination - SATU BARIS -->
         <div id="pagination" class="pagination" style="display: none;">
             <button id="prev-btn" disabled>
                 <i class="fas fa-chevron-left"></i> Sebelumnya
@@ -808,15 +1145,12 @@
         </div>
     </main>
     
-    <!-- Halaman Detail Manga -->
     <div class="container" id="detail-page">
-        <!-- Loading State Detail -->
         <div id="detail-loading" class="loading">
             <i class="fas fa-spinner"></i>
             <p>Memuat detail manga...</p>
         </div>
         
-        <!-- Error State Detail -->
         <div id="detail-error" class="error">
             <i class="fas fa-exclamation-triangle"></i>
             <p id="detail-error-message">Gagal memuat detail manga.</p>
@@ -825,19 +1159,15 @@
             </button>
         </div>
         
-        <!-- Detail Manga Content -->
         <div id="detail-content" class="manga-detail"></div>
     </div>
     
-    <!-- Halaman Reader Chapter -->
     <div class="container" id="reader-page">
-        <!-- Loading State Reader -->
         <div id="reader-loading" class="loading">
             <i class="fas fa-spinner"></i>
             <p>Memuat chapter...</p>
         </div>
         
-        <!-- Error State Reader -->
         <div id="reader-error" class="error">
             <i class="fas fa-exclamation-triangle"></i>
             <p id="reader-error-message">Gagal memuat chapter.</p>
@@ -846,7 +1176,6 @@
             </button>
         </div>
         
-        <!-- Reader Content -->
         <div id="reader-content" class="reader-container" style="display: none;">
             <div class="reader-controls" style="margin-bottom: 15px;">
                 <button id="prev-chapter-btn" class="reader-btn" disabled>
@@ -859,7 +1188,6 @@
             
             <div id="chapter-images" class="chapter-images"></div>
             
-            <!-- Bottom Controls juga SATU BARIS -->
             <div class="reader-controls mt-15">
                 <button id="prev-chapter-btn-bottom" class="reader-btn" disabled>
                     <i class="fas fa-chevron-left"></i> <span class="btn-text">Prev</span>
@@ -880,29 +1208,28 @@
     </footer>
 
     <script>
-        // Konfigurasi API
         const API_BASE = 'https://unofficial-komikcast-api.vercel.app';
         const LATEST_API = `${API_BASE}/komikcast/latest`;
+        const SEARCH_API = `${API_BASE}/komikcast/search`;
         
-        // State aplikasi
-        let currentView = 'list'; // 'list', 'detail', atau 'reader'
+        let currentView = 'list';
         let currentPage = 1;
         let currentMangaSlug = '';
         let currentChapterSlug = '';
         let currentMangaTitle = '';
         let currentChapterData = null;
         
-        // State untuk lazy loading
+        let searchQuery = '';
+        let searchCurrentPage = 1;
+        
         let imageObserver = null;
         let loadedImagesCount = 0;
         let totalImagesCount = 0;
         
-        // Elemen DOM
         const mainPageEl = document.getElementById('main-page');
         const detailPageEl = document.getElementById('detail-page');
         const readerPageEl = document.getElementById('reader-page');
         
-        // Loading dan Error elements
         const loadingEl = document.getElementById('loading');
         const errorEl = document.getElementById('error');
         const emptyEl = document.getElementById('empty');
@@ -912,39 +1239,45 @@
         const readerErrorEl = document.getElementById('reader-error');
         const readerContentEl = document.getElementById('reader-content');
         
-        // Content elements
         const mangaGridEl = document.getElementById('manga-grid');
         const detailContentEl = document.getElementById('detail-content');
         const chapterImagesEl = document.getElementById('chapter-images');
         
-        // Navigation elements
         const backBtn = document.getElementById('back-btn');
         const readerBackBtn = document.getElementById('reader-back-btn');
         const logoBtn = document.getElementById('logo-btn');
         const logoTextEl = document.getElementById('logo-text');
         const subtitleEl = document.getElementById('subtitle');
         
-        // Pagination elements
         const paginationEl = document.getElementById('pagination');
         const prevBtn = document.getElementById('prev-btn');
         const nextBtn = document.getElementById('next-btn');
         const currentPageEl = document.getElementById('current-page');
         
-        // Reader control elements
-        const chapterTitleEl = document.getElementById('chapter-title');
         const prevChapterBtn = document.getElementById('prev-chapter-btn');
         const nextChapterBtn = document.getElementById('next-chapter-btn');
         const prevChapterBtnBottom = document.getElementById('prev-chapter-btn-bottom');
         const nextChapterBtnBottom = document.getElementById('next-chapter-btn-bottom');
-        const readingProgressEl = document.getElementById('reading-progress');
         const readerProgressText = document.getElementById('reader-progress-text');
         
-        // Retry buttons
         const retryBtn = document.getElementById('retry-btn');
         const detailRetryBtn = document.getElementById('detail-retry-btn');
         const readerRetryBtn = document.getElementById('reader-retry-btn');
         
-        // Tambahkan style untuk tombol retry
+        const searchToggleBtn = document.getElementById('search-toggle-btn');
+        const searchModal = document.getElementById('search-modal');
+        const closeSearchBtn = document.getElementById('close-search-btn');
+        const searchInput = document.getElementById('search-input');
+        const clearSearchBtn = document.getElementById('clear-search-btn');
+        const searchLoading = document.getElementById('search-loading');
+        const searchError = document.getElementById('search-error');
+        const searchEmpty = document.getElementById('search-empty');
+        const searchResults = document.getElementById('search-results');
+        const searchPagination = document.getElementById('search-pagination');
+        const searchPrevBtn = document.getElementById('search-prev-btn');
+        const searchNextBtn = document.getElementById('search-next-btn');
+        const searchCurrentPageEl = document.getElementById('search-current-page');
+        
         const style = document.createElement('style');
         style.textContent = `
             .retry-btn {
@@ -964,9 +1297,6 @@
         `;
         document.head.appendChild(style);
         
-        // ========== LOCALSTORAGE FUNCTIONS ==========
-        
-        // Simpan data manga list ke localStorage
         function saveMangaListToStorage(page, mangaList, meta) {
             try {
                 const cacheData = {
@@ -976,20 +1306,17 @@
                     page: page
                 };
                 localStorage.setItem('mangaListCache', JSON.stringify(cacheData));
-                console.log('Manga list saved to storage');
             } catch (error) {
                 console.error('Error saving to localStorage:', error);
             }
         }
         
-        // Ambil data manga list dari localStorage
         function getMangaListFromStorage() {
             try {
                 const cached = localStorage.getItem('mangaListCache');
                 if (!cached) return null;
                 
                 const data = JSON.parse(cached);
-                // Cek jika cache masih valid (10 menit)
                 if (Date.now() - data.timestamp > 10 * 60 * 1000) {
                     localStorage.removeItem('mangaListCache');
                     return null;
@@ -1002,7 +1329,6 @@
             }
         }
         
-        // Simpan detail manga ke localStorage
         function saveMangaDetailToStorage(slug, mangaDetail) {
             try {
                 const detailCache = {
@@ -1015,14 +1341,12 @@
             }
         }
         
-        // Ambil detail manga dari localStorage
         function getMangaDetailFromStorage(slug) {
             try {
                 const cached = localStorage.getItem(`mangaDetail_${slug}`);
                 if (!cached) return null;
                 
                 const data = JSON.parse(cached);
-                // Cek jika cache masih valid (30 menit)
                 if (Date.now() - data.timestamp > 30 * 60 * 1000) {
                     localStorage.removeItem(`mangaDetail_${slug}`);
                     return null;
@@ -1034,8 +1358,6 @@
                 return null;
             }
         }
-        
-        // ========== FUNGSI UTILITAS ==========
         
         function showElement(element) {
             element.style.display = 'block';
@@ -1093,18 +1415,41 @@
             }
         }
         
-        // ========== FUNGSI LAZY LOADING ==========
+        function showSearchModal() {
+            searchModal.classList.remove('hidden');
+            searchInput.focus();
+        }
+        
+        function hideSearchModal() {
+            searchModal.classList.add('hidden');
+            searchInput.value = '';
+            clearSearchBtn.classList.add('hidden');
+            searchResults.innerHTML = '';
+            searchPagination.classList.add('hidden');
+            hideElement(searchError);
+            hideElement(searchEmpty);
+            searchQuery = '';
+            searchCurrentPage = 1;
+        }
+        
+        function clearSearch() {
+            searchInput.value = '';
+            clearSearchBtn.classList.add('hidden');
+            searchResults.innerHTML = '';
+            searchPagination.classList.add('hidden');
+            hideElement(searchError);
+            hideElement(searchEmpty);
+            searchQuery = '';
+            searchCurrentPage = 1;
+        }
         
         function initLazyLoading() {
-            // Hapus observer lama jika ada
             if (imageObserver) {
                 imageObserver.disconnect();
             }
             
-            // Reset counters
             loadedImagesCount = 0;
             
-            // Buat Intersection Observer baru
             imageObserver = new IntersectionObserver((entries) => {
                 entries.forEach(entry => {
                     if (entry.isIntersecting) {
@@ -1114,19 +1459,17 @@
                     }
                 });
             }, {
-                rootMargin: '50px', // Load gambar 50px sebelum masuk viewport
+                rootMargin: '50px',
                 threshold: 0.1
             });
         }
         
         function loadImage(img) {
-            // Jika gambar sudah memiliki src (sudah diload), skip
             if (img.dataset.src) {
                 const src = img.dataset.src;
                 img.src = src;
                 delete img.dataset.src;
                 
-                // Tambahkan event listener untuk tracking load
                 img.onload = () => handleImageLoad(img);
                 img.onerror = () => handleImageError(img);
             }
@@ -1136,7 +1479,6 @@
             loadedImagesCount++;
             updateProgress();
             
-            // Tambahkan class loaded untuk fade in effect
             img.classList.add('loaded');
         }
         
@@ -1144,7 +1486,6 @@
             loadedImagesCount++;
             updateProgress();
             
-            // Tampilkan placeholder untuk gambar error
             img.style.filter = 'grayscale(100%)';
             img.style.opacity = '0.5';
             img.classList.add('loaded');
@@ -1152,9 +1493,6 @@
         
         function updateProgress() {
             const progress = Math.round((loadedImagesCount / totalImagesCount) * 100);
-            if (readingProgressEl) {
-                readingProgressEl.style.width = `${progress}%`;
-            }
             if (readerProgressText) {
                 readerProgressText.textContent = `Memuat gambar (${loadedImagesCount}/${totalImagesCount})`;
                 
@@ -1163,8 +1501,6 @@
                 }
             }
         }
-        
-        // ========== FUNGSI API ==========
         
         async function fetchWithTimeout(url, timeout = 15000) {
             const controller = new AbortController();
@@ -1186,11 +1522,9 @@
             hideElement(emptyEl);
             hideElement(paginationEl);
             
-            // Cek cache terlebih dahulu jika tidak force refresh
             if (!forceRefresh) {
                 const cachedData = getMangaListFromStorage();
                 if (cachedData && cachedData.page === page) {
-                    console.log('Loading manga list from cache');
                     hideElement(loadingEl);
                     renderMangaList(cachedData.mangaList);
                     updatePagination(cachedData.meta);
@@ -1213,7 +1547,6 @@
                     return;
                 }
                 
-                // Simpan ke cache
                 saveMangaListToStorage(page, data.data, data.meta);
                 
                 renderMangaList(data.data);
@@ -1224,11 +1557,9 @@
                 console.error('Error fetching manga:', error);
                 hideElement(loadingEl);
                 
-                // Jika gagal fetch dari API, coba load dari cache
                 if (!forceRefresh) {
                     const cachedData = getMangaListFromStorage();
                     if (cachedData) {
-                        console.log('Fallback to cached manga list');
                         renderMangaList(cachedData.mangaList);
                         updatePagination(cachedData.meta);
                         return;
@@ -1246,6 +1577,118 @@
             }
         }
         
+        async function searchManga(query, page = 1) {
+            if (!query.trim()) {
+                searchResults.innerHTML = '';
+                searchPagination.classList.add('hidden');
+                return;
+            }
+            
+            searchQuery = query.trim();
+            searchCurrentPage = page;
+            
+            showElement(searchLoading);
+            hideElement(searchError);
+            hideElement(searchEmpty);
+            searchResults.innerHTML = '';
+            searchPagination.classList.add('hidden');
+            
+            try {
+                const url = `${SEARCH_API}?q=${encodeURIComponent(searchQuery)}&page=${page}`;
+                const response = await fetchWithTimeout(url);
+                
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                
+                const data = await response.json();
+                hideElement(searchLoading);
+                
+                if (!data.data || data.data.length === 0) {
+                    showElement(searchEmpty);
+                    return;
+                }
+                
+                renderSearchResults(data.data);
+                updateSearchPagination(data.meta);
+                
+            } catch (error) {
+                console.error('Error searching manga:', error);
+                hideElement(searchLoading);
+                
+                if (document.getElementById('search-error-message')) {
+                    document.getElementById('search-error-message').textContent = 
+                        error.name === 'AbortError' 
+                        ? 'Request timeout. Check your internet connection.'
+                        : `Failed to search: ${error.message}`;
+                }
+                
+                showElement(searchError);
+            }
+        }
+        
+        function renderSearchResults(results) {
+            if (!results || results.length === 0) {
+                showElement(searchEmpty);
+                return;
+            }
+            
+            hideElement(searchEmpty);
+            searchResults.innerHTML = '';
+            
+            results.forEach((manga, index) => {
+                const resultItem = document.createElement('div');
+                resultItem.className = 'search-result-item fade-in';
+                resultItem.style.animationDelay = `${index * 0.05}s`;
+                resultItem.dataset.slug = manga.slug;
+                
+                const thumbnail = manga.thumbnail || 'https://via.placeholder.com/60x80/2d3748/4a5568?text=No+Image';
+                const latestChapterTitle = manga.latest_chapter?.title || 'Chapter tidak diketahui';
+                
+                resultItem.innerHTML = `
+                    <img src="${thumbnail}" alt="${manga.title}" class="search-result-thumbnail" loading="lazy">
+                    <div class="search-result-info">
+                        <h4 class="search-result-title" title="${manga.title}">${manga.title}</h4>
+                        <div class="search-result-meta">
+                            <div class="search-result-rating">
+                                <i class="fas fa-star"></i> ${manga.rating || 'N/A'}
+                            </div>
+                            <div class="search-result-type">${manga.type || 'Manga'}</div>
+                        </div>
+                        <div class="search-result-chapter" title="${latestChapterTitle}">
+                            ${latestChapterTitle}
+                        </div>
+                    </div>
+                `;
+                
+                resultItem.addEventListener('click', () => {
+                    hideSearchModal();
+                    showMangaDetail(manga.slug);
+                });
+                
+                searchResults.appendChild(resultItem);
+            });
+        }
+        
+        function updateSearchPagination(meta) {
+            if (!meta || !searchPagination) {
+                if (searchPagination) searchPagination.classList.add('hidden');
+                return;
+            }
+            
+            searchCurrentPage = meta.page || 1;
+            
+            if (searchCurrentPageEl) searchCurrentPageEl.textContent = searchCurrentPage;
+            
+            if (searchPrevBtn) {
+                searchPrevBtn.disabled = !meta.pagination?.previous_page;
+            }
+            
+            if (searchNextBtn) {
+                searchNextBtn.disabled = !meta.pagination?.next_page;
+            }
+            
+            searchPagination.classList.remove('hidden');
+        }
+        
         async function fetchMangaDetail(slug, forceRefresh = false) {
             showElement(detailLoadingEl);
             hideElement(detailErrorEl);
@@ -1255,11 +1698,9 @@
             logoTextEl.textContent = 'Loading...';
             subtitleEl.textContent = 'Mengambil detail manga';
             
-            // Cek cache terlebih dahulu jika tidak force refresh
             if (!forceRefresh) {
                 const cachedData = getMangaDetailFromStorage(slug);
                 if (cachedData) {
-                    console.log('Loading manga detail from cache');
                     hideElement(detailLoadingEl);
                     renderMangaDetail(cachedData);
                     currentMangaTitle = cachedData.title || 'Unknown Manga';
@@ -1281,7 +1722,6 @@
                 const data = await response.json();
                 hideElement(detailLoadingEl);
                 
-                // Simpan ke cache
                 saveMangaDetailToStorage(slug, data.data);
                 
                 renderMangaDetail(data.data);
@@ -1296,11 +1736,9 @@
                 console.error('Error fetching manga detail:', error);
                 hideElement(detailLoadingEl);
                 
-                // Jika gagal fetch dari API, coba load dari cache
                 if (!forceRefresh) {
                     const cachedData = getMangaDetailFromStorage(slug);
                     if (cachedData) {
-                        console.log('Fallback to cached manga detail');
                         renderMangaDetail(cachedData);
                         currentMangaTitle = cachedData.title || 'Unknown Manga';
                         
@@ -1331,12 +1769,8 @@
             
             currentChapterSlug = slug;
             
-            // Perbaikan: Cek elemen sebelum mengaksesnya
             if (readerProgressText) {
                 readerProgressText.textContent = 'Memuat gambar...';
-            }
-            if (readingProgressEl) {
-                readingProgressEl.style.width = '0%';
             }
             
             try {
@@ -1354,7 +1788,6 @@
                 renderChapterImages(data.data);
                 updateChapterNavigation(data.data);
                 
-                // Perbaikan: Update judul di header, bukan di chapterTitleEl yang tidak ada
                 logoTextEl.textContent = currentMangaTitle || 'Manga Reader';
                 subtitleEl.textContent = 'Chapter '+data.data.chapter_number || 'Membaca chapter';
                 
@@ -1376,8 +1809,6 @@
                 subtitleEl.textContent = 'Gagal memuat chapter';
             }
         }
-        
-        // ========== RENDER FUNCTIONS ==========
         
         function renderMangaList(mangaList) {
             if (!mangaGridEl) return;
@@ -1440,12 +1871,9 @@
             
             let chaptersHtml = '';
             if (manga.chapters && manga.chapters.length > 0) {
-                // URUTKAN DESCENDING berdasarkan nomor chapter
                 const sortedChapters = [...manga.chapters].sort((a, b) => {
-                    // Ekstrak angka dari judul chapter
                     const getChapterNumber = (title) => {
                         if (!title) return 0;
-                        // Cari angka dalam judul chapter
                         const match = title.match(/(\d+(\.\d+)?)/);
                         return match ? parseFloat(match[1]) : 0;
                     };
@@ -1453,7 +1881,6 @@
                     const numA = getChapterNumber(a.title);
                     const numB = getChapterNumber(b.title);
                     
-                    // Urutkan descending (terbaru/tertinggi di atas)
                     return numB - numA;
                 });
                 
@@ -1524,7 +1951,6 @@
                 </div>
             `;
             
-            // Add event listeners to chapter items
             const chapterItems = detailContentEl.querySelectorAll('.chapter-item[data-slug]');
             chapterItems.forEach(item => {
                 item.addEventListener('click', () => {
@@ -1551,9 +1977,6 @@
                 if (readerProgressText) {
                     readerProgressText.textContent = 'Tidak ada gambar';
                 }
-                if (readingProgressEl) {
-                    readingProgressEl.style.width = '100%';
-                }
                 return;
             }
             
@@ -1565,7 +1988,6 @@
             }
             initLazyLoading();
             
-            // Create image containers dengan data-src untuk lazy loading
             chapterData.images.forEach((imageUrl, index) => {
                 const imageNumber = index + 1;
                 const container = document.createElement('div');
@@ -1583,21 +2005,17 @@
                 
                 chapterImagesEl.appendChild(container);
                 
-                // Observasi gambar untuk lazy loading
                 const img = container.querySelector('img');
                 if (img && imageObserver) {
                     imageObserver.observe(img);
                 }
             });
             
-            // Pre-load 3 gambar pertama untuk UX yang lebih baik
             const firstImages = chapterImagesEl.querySelectorAll('img');
             for (let i = 0; i < Math.min(2, firstImages.length); i++) {
                 loadImage(firstImages[i]);
             }
         }
-        
-        // ========== NAVIGATION FUNCTIONS ==========
         
         function updateChapterNavigation(chapterData) {
             const hasPrevChapter = chapterData.previous_chapter_slug && chapterData.previous_chapter_slug !== '';
@@ -1648,8 +2066,6 @@
             showElement(paginationEl);
         }
         
-        // ========== URL ROUTING ==========
-        
         function parseHashRoute() {
             const hash = window.location.hash;
             
@@ -1665,7 +2081,6 @@
                 return;
             }
             
-            // Format hash: #manga/{slug} atau #chapter/{slug}
             const parts = hash.substring(1).split('/');
             
             if (parts.length < 2) {
@@ -1691,9 +2106,75 @@
             }
         }
         
-        // ========== EVENT LISTENERS ==========
+        if (searchToggleBtn) {
+            searchToggleBtn.addEventListener('click', showSearchModal);
+        }
         
-        // Navigation
+        if (closeSearchBtn) {
+            closeSearchBtn.addEventListener('click', hideSearchModal);
+        }
+        
+        if (clearSearchBtn) {
+            clearSearchBtn.addEventListener('click', clearSearch);
+        }
+        
+        searchModal.addEventListener('click', (e) => {
+            if (e.target === searchModal) {
+                hideSearchModal();
+            }
+        });
+        
+        if (searchInput) {
+            let searchTimeout;
+            
+            searchInput.addEventListener('input', (e) => {
+                const query = e.target.value;
+                
+                if (query.trim()) {
+                    clearSearchBtn.classList.remove('hidden');
+                } else {
+                    clearSearchBtn.classList.add('hidden');
+                }
+                
+                clearTimeout(searchTimeout);
+                
+                if (query.trim()) {
+                    searchTimeout = setTimeout(() => {
+                        searchManga(query, 1);
+                    }, 500);
+                } else {
+                    searchResults.innerHTML = '';
+                    searchPagination.classList.add('hidden');
+                    hideElement(searchError);
+                    hideElement(searchEmpty);
+                }
+            });
+            
+            searchInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    const query = searchInput.value.trim();
+                    if (query) {
+                        searchManga(query, 1);
+                    }
+                }
+            });
+        }
+        
+        if (searchPrevBtn) {
+            searchPrevBtn.addEventListener('click', () => {
+                if (searchCurrentPage > 1) {
+                    searchManga(searchQuery, searchCurrentPage - 1);
+                }
+            });
+        }
+        
+        if (searchNextBtn) {
+            searchNextBtn.addEventListener('click', () => {
+                searchManga(searchQuery, searchCurrentPage + 1);
+            });
+        }
+        
         if (prevBtn) {
             prevBtn.addEventListener('click', () => {
                 if (currentPage > 1) {
@@ -1710,14 +2191,14 @@
         
         if (retryBtn) {
             retryBtn.addEventListener('click', () => {
-                fetchManga(currentPage, true); // Force refresh
+                fetchManga(currentPage, true);
             });
         }
         
         if (detailRetryBtn) {
             detailRetryBtn.addEventListener('click', () => {
                 if (currentMangaSlug) {
-                    fetchMangaDetail(currentMangaSlug, true); // Force refresh
+                    fetchMangaDetail(currentMangaSlug, true);
                 }
             });
         }
@@ -1753,7 +2234,6 @@
             });
         }
         
-        // Chapter navigation
         if (prevChapterBtn) {
             prevChapterBtn.addEventListener('click', goToPrevChapter);
         }
@@ -1770,14 +2250,17 @@
             nextChapterBtnBottom.addEventListener('click', goToNextChapter);
         }
         
-        // Browser history
         window.addEventListener('popstate', (event) => {
             parseHashRoute();
         });
         
-        // Keyboard shortcuts
         document.addEventListener('keydown', (e) => {
-            if (currentView === 'reader') {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+                e.preventDefault();
+                showSearchModal();
+            } else if (e.key === 'Escape' && !searchModal.classList.contains('hidden')) {
+                hideSearchModal();
+            } else if (currentView === 'reader') {
                 if (e.key === 'ArrowLeft' && prevChapterBtn && !prevChapterBtn.disabled) {
                     goToPrevChapter();
                 } else if (e.key === 'ArrowRight' && nextChapterBtn && !nextChapterBtn.disabled) {
@@ -1791,7 +2274,6 @@
             }
         });
         
-        // Swipe gestures
         let touchStartX = 0;
         
         document.addEventListener('touchstart', (e) => {
@@ -1814,24 +2296,18 @@
             }
         }, { passive: true });
         
-        // ========== INITIALIZE ==========
-        
         document.addEventListener('DOMContentLoaded', () => {
-            // Tampilkan data dari cache terlebih dahulu untuk loading cepat
             const cachedData = getMangaListFromStorage();
             if (cachedData && cachedData.mangaList) {
                 renderMangaList(cachedData.mangaList);
                 updatePagination(cachedData.meta);
             }
             
-            // Parse URL hash untuk routing
             parseHashRoute();
         });
         
-        // Handle page visibility change (tab switching)
         document.addEventListener('visibilitychange', () => {
             if (!document.hidden && currentView === 'list') {
-                // Refresh cache ketika kembali ke tab
                 const cachedData = getMangaListFromStorage();
                 if (cachedData && cachedData.mangaList) {
                     renderMangaList(cachedData.mangaList);
