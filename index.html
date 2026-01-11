@@ -652,22 +652,6 @@
         .mt-20 {
             margin-top: 20px;
         }
-        
-        /* Bottom Navigation untuk Reader */
-        .reader-bottom-nav {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: rgba(0, 0, 0, 0.9);
-            backdrop-filter: blur(10px);
-            padding: 15px;
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            z-index: 100;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-        }
     </style>
 </head>
 <body>
@@ -704,7 +688,7 @@
         <div id="error" class="error">
             <i class="fas fa-exclamation-triangle"></i>
             <p id="error-message">Gagal memuat data manga.</p>
-            <button id="retry-btn" style="margin-top: 15px; padding: 8px 20px; background: #ff6b6b; color: white; border: none; border-radius: 5px; cursor: pointer;">
+            <button id="retry-btn" class="retry-btn">
                 Coba Lagi
             </button>
         </div>
@@ -742,7 +726,7 @@
         <div id="detail-error" class="error">
             <i class="fas fa-exclamation-triangle"></i>
             <p id="detail-error-message">Gagal memuat detail manga.</p>
-            <button id="detail-retry-btn" style="margin-top: 15px; padding: 8px 20px; background: #ff6b6b; color: white; border: none; border-radius: 5px; cursor: pointer;">
+            <button id="detail-retry-btn" class="retry-btn">
                 Coba Lagi
             </button>
         </div>
@@ -763,13 +747,13 @@
         <div id="reader-error" class="error">
             <i class="fas fa-exclamation-triangle"></i>
             <p id="reader-error-message">Gagal memuat chapter.</p>
-            <button id="reader-retry-btn" style="margin-top: 15px; padding: 8px 20px; background: #ff6b6b; color: white; border: none; border-radius: 5px; cursor: pointer;">
+            <button id="reader-retry-btn" class="retry-btn">
                 Coba Lagi
             </button>
         </div>
         
         <!-- Reader Content -->
-        <div id="reader-content" class="reader-container">
+        <div id="reader-content" class="reader-container" style="display: none;">
             <div class="reader-header">
                 <h1 class="reader-title" id="chapter-title">Chapter Title</h1>
                 <div class="progress-bar">
@@ -818,8 +802,6 @@
         let currentMangaSlug = '';
         let currentChapterSlug = '';
         let currentMangaTitle = '';
-        
-        // State untuk chapter navigation
         let currentChapterData = null;
         
         // Elemen DOM
@@ -835,11 +817,11 @@
         const detailErrorEl = document.getElementById('detail-error');
         const readerLoadingEl = document.getElementById('reader-loading');
         const readerErrorEl = document.getElementById('reader-error');
+        const readerContentEl = document.getElementById('reader-content');
         
         // Content elements
         const mangaGridEl = document.getElementById('manga-grid');
         const detailContentEl = document.getElementById('detail-content');
-        const readerContentEl = document.getElementById('reader-content');
         const chapterImagesEl = document.getElementById('chapter-images');
         
         // Navigation elements
@@ -869,7 +851,36 @@
         const detailRetryBtn = document.getElementById('detail-retry-btn');
         const readerRetryBtn = document.getElementById('reader-retry-btn');
         
-        // Fungsi untuk beralih antara halaman
+        // Tambahkan style untuk tombol retry
+        const style = document.createElement('style');
+        style.textContent = `
+            .retry-btn {
+                margin-top: 15px;
+                padding: 8px 20px;
+                background: #ff6b6b;
+                color: white;
+                border: none;
+                border-radius: 5px;
+                cursor: pointer;
+                font-size: 0.9rem;
+            }
+            
+            .retry-btn:hover {
+                background: #ff5252;
+            }
+        `;
+        document.head.appendChild(style);
+        
+        // ========== FUNGSI UTILITAS ==========
+        
+        function showElement(element) {
+            element.style.display = 'block';
+        }
+        
+        function hideElement(element) {
+            element.style.display = 'none';
+        }
+        
         function showListView() {
             currentView = 'list';
             mainPageEl.style.display = 'block';
@@ -882,7 +893,6 @@
             logoTextEl.textContent = 'Manga List';
             subtitleEl.textContent = 'Daftar manga terbaru dari Komikcast';
             
-            // Update URL hash
             updateUrlHash('');
         }
         
@@ -895,7 +905,6 @@
             backBtn.classList.remove('hidden');
             readerBackBtn.classList.add('hidden');
             
-            // Update URL hash
             updateUrlHash(`manga-${currentMangaSlug}`);
         }
         
@@ -908,11 +917,9 @@
             backBtn.classList.add('hidden');
             readerBackBtn.classList.remove('hidden');
             
-            // Update URL hash
             updateUrlHash(`chapter-${currentChapterSlug}`);
         }
         
-        // Fungsi untuk update URL hash
         function updateUrlHash(hash) {
             if (history.pushState) {
                 const newUrl = hash ? `#${hash}` : window.location.pathname;
@@ -920,7 +927,22 @@
             }
         }
         
-        // Fungsi untuk mengambil data manga terbaru
+        // ========== FUNGSI API ==========
+        
+        async function fetchWithTimeout(url, timeout = 15000) {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), timeout);
+            
+            try {
+                const response = await fetch(url, { signal: controller.signal });
+                clearTimeout(timeoutId);
+                return response;
+            } catch (error) {
+                clearTimeout(timeoutId);
+                throw error;
+            }
+        }
+        
         async function fetchManga(page = 1) {
             showElement(loadingEl);
             hideElement(errorEl);
@@ -932,9 +954,7 @@
                 const url = page > 1 ? `${LATEST_API}?page=${page}` : LATEST_API;
                 const response = await fetchWithTimeout(url);
                 
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
                 
                 const data = await response.json();
                 hideElement(loadingEl);
@@ -953,7 +973,7 @@
                 hideElement(loadingEl);
                 
                 document.getElementById('error-message').textContent = 
-                    error.name === 'TimeoutError' 
+                    error.name === 'AbortError' 
                     ? 'Waktu permintaan habis. Periksa koneksi internet Anda.'
                     : `Gagal memuat data: ${error.message}`;
                 
@@ -961,7 +981,6 @@
             }
         }
         
-        // Fungsi untuk mengambil detail manga
         async function fetchMangaDetail(slug) {
             showElement(detailLoadingEl);
             hideElement(detailErrorEl);
@@ -975,15 +994,13 @@
                 const url = `${API_BASE}/komikcast/detail/${slug}`;
                 const response = await fetchWithTimeout(url);
                 
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
                 
                 const data = await response.json();
                 hideElement(detailLoadingEl);
                 
                 renderMangaDetail(data.data);
-                currentMangaTitle = data.data.title;
+                currentMangaTitle = data.data.title || 'Unknown Manga';
                 
                 logoTextEl.textContent = data.data.title || 'Detail Manga';
                 subtitleEl.textContent = 'Detail manga dari Komikcast';
@@ -995,7 +1012,7 @@
                 hideElement(detailLoadingEl);
                 
                 document.getElementById('detail-error-message').textContent = 
-                    error.name === 'TimeoutError' 
+                    error.name === 'AbortError' 
                     ? 'Waktu permintaan habis. Periksa koneksi internet Anda.'
                     : `Gagal memuat detail manga: ${error.message}`;
                 
@@ -1005,7 +1022,6 @@
             }
         }
         
-        // Fungsi untuk mengambil chapter images
         async function fetchChapterImages(slug) {
             showElement(readerLoadingEl);
             hideElement(readerErrorEl);
@@ -1015,17 +1031,13 @@
             currentChapterSlug = slug;
             chapterTitleEl.textContent = 'Memuat...';
             readerProgressText.textContent = 'Memuat gambar...';
-            
-            // Reset progress bar
             readingProgressEl.style.width = '0%';
             
             try {
                 const url = `${API_BASE}/komikcast/chapter/${slug}`;
                 const response = await fetchWithTimeout(url);
                 
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
                 
                 const data = await response.json();
                 currentChapterData = data.data;
@@ -1036,7 +1048,6 @@
                 renderChapterImages(data.data);
                 updateChapterNavigation(data.data);
                 
-                // Update title
                 chapterTitleEl.textContent = data.data.title || 'Chapter';
                 logoTextEl.textContent = currentMangaTitle || 'Manga Reader';
                 subtitleEl.textContent = data.data.title || 'Membaca chapter';
@@ -1048,7 +1059,7 @@
                 hideElement(readerLoadingEl);
                 
                 document.getElementById('reader-error-message').textContent = 
-                    error.name === 'TimeoutError' 
+                    error.name === 'AbortError' 
                     ? 'Waktu permintaan habis. Periksa koneksi internet Anda.'
                     : `Gagal memuat chapter: ${error.message}`;
                 
@@ -1059,7 +1070,8 @@
             }
         }
         
-        // Fungsi untuk merender daftar manga
+        // ========== RENDER FUNCTIONS ==========
+        
         function renderMangaList(mangaList) {
             mangaGridEl.innerHTML = '';
             
@@ -1095,7 +1107,6 @@
             });
         }
         
-        // Fungsi untuk merender detail manga
         function renderMangaDetail(manga) {
             const thumbnail = manga.thumbnail || 'https://via.placeholder.com/250x350/2d3748/4a5568?text=No+Image';
             const rating = manga.rating || 'N/A';
@@ -1112,7 +1123,7 @@
             let chaptersHtml = '';
             if (manga.chapters && manga.chapters.length > 0) {
                 const sortedChapters = [...manga.chapters].sort((a, b) => {
-                    return new Date(b.released_at) - new Date(a.released_at);
+                    return new Date(b.released_at || 0) - new Date(a.released_at || 0);
                 });
                 
                 chaptersHtml = sortedChapters.map(chapter => {
@@ -1125,7 +1136,7 @@
                     
                     return `
                         <div class="chapter-item" data-slug="${chapter.slug}">
-                            <div class="chapter-title">${chapter.title}</div>
+                            <div class="chapter-title">${chapter.title || 'Chapter tanpa judul'}</div>
                             <div class="chapter-date">${date}</div>
                         </div>
                     `;
@@ -1192,7 +1203,6 @@
             });
         }
         
-        // Fungsi untuk merender gambar chapter
         function renderChapterImages(chapterData) {
             chapterImagesEl.innerHTML = '';
             
@@ -1213,9 +1223,35 @@
             const totalImages = chapterData.images.length;
             let loadedImages = 0;
             
-            // Update progress text
             readerProgressText.textContent = `Memuat gambar (0/${totalImages})`;
             
+            // Setup image loading tracker
+            window.trackImageLoad = function() {
+                loadedImages++;
+                const progress = Math.round((loadedImages / totalImages) * 100);
+                readingProgressEl.style.width = `${progress}%`;
+                readerProgressText.textContent = `Memuat gambar (${loadedImages}/${totalImages})`;
+                
+                if (loadedImages === totalImages) {
+                    readerProgressText.textContent = `Selesai memuat ${totalImages} gambar`;
+                }
+            };
+            
+            window.trackImageError = function(img) {
+                loadedImages++;
+                const progress = Math.round((loadedImages / totalImages) * 100);
+                readingProgressEl.style.width = `${progress}%`;
+                readerProgressText.textContent = `Memuat gambar (${loadedImages}/${totalImages})`;
+                
+                img.style.filter = 'grayscale(100%)';
+                img.style.opacity = '0.7';
+                
+                if (loadedImages === totalImages) {
+                    readerProgressText.textContent = `Selesai memuat ${totalImages} gambar`;
+                }
+            };
+            
+            // Create image containers
             chapterData.images.forEach((imageUrl, index) => {
                 const imageNumber = index + 1;
                 const container = document.createElement('div');
@@ -1228,65 +1264,33 @@
                         alt="Page ${imageNumber}" 
                         class="chapter-image" 
                         loading="lazy"
-                        onload="imageLoaded(this)"
-                        onerror="imageError(this)"
-                        data-index="${index}"
+                        onload="trackImageLoad()"
+                        onerror="trackImageError(this)"
                     >
                     <div class="image-number">${imageNumber}/${totalImages}</div>
                 `;
                 
                 chapterImagesEl.appendChild(container);
             });
-            
-            // Fungsi global untuk track image loading
-            window.imageLoaded = function(img) {
-                loadedImages++;
-                const progress = Math.round((loadedImages / totalImages) * 100);
-                readingProgressEl.style.width = `${progress}%`;
-                readerProgressText.textContent = `Memuat gambar (${loadedImages}/${totalImages})`;
-                
-                if (loadedImages === totalImages) {
-                    readerProgressText.textContent = `Selesai memuat ${totalImages} gambar`;
-                }
-            };
-            
-            window.imageError = function(img) {
-                loadedImages++;
-                const progress = Math.round((loadedImages / totalImages) * 100);
-                readingProgressEl.style.width = `${progress}%`;
-                readerProgressText.textContent = `Memuat gambar (${loadedImages}/${totalImages})`;
-                
-                // Show error on image
-                img.style.filter = 'grayscale(100%)';
-                img.style.opacity = '0.7';
-                
-                if (loadedImages === totalImages) {
-                    readerProgressText.textContent = `Selesai memuat ${totalImages} gambar`;
-                }
-            };
         }
         
-        // Fungsi untuk update navigasi chapter
+        // ========== NAVIGATION FUNCTIONS ==========
+        
         function updateChapterNavigation(chapterData) {
             const hasPrevChapter = chapterData.previous_chapter_slug && chapterData.previous_chapter_slug !== '';
             const hasNextChapter = chapterData.next_chapter_slug && chapterData.next_chapter_slug !== '';
             
-            // Enable/disable previous chapter buttons
             prevChapterBtn.disabled = !hasPrevChapter;
             prevChapterBtnBottom.disabled = !hasPrevChapter;
-            
-            // Enable/disable next chapter buttons
             nextChapterBtn.disabled = !hasNextChapter;
             nextChapterBtnBottom.disabled = !hasNextChapter;
         }
         
-        // Fungsi untuk menampilkan chapter
         function showChapter(chapterSlug) {
             showReaderView();
             fetchChapterImages(chapterSlug);
         }
         
-        // Fungsi untuk navigasi ke chapter berikutnya/sebelumnya
         function goToNextChapter() {
             if (currentChapterData && currentChapterData.next_chapter_slug) {
                 showChapter(currentChapterData.next_chapter_slug);
@@ -1299,14 +1303,12 @@
             }
         }
         
-        // Fungsi untuk menampilkan detail manga
         function showMangaDetail(slug) {
             currentMangaSlug = slug;
             showDetailView();
             fetchMangaDetail(slug);
         }
         
-        // Fungsi untuk update pagination
         function updatePagination(meta) {
             if (!meta) {
                 hideElement(paginationEl);
@@ -1322,24 +1324,9 @@
             showElement(paginationEl);
         }
         
-        // Fungsi fetch dengan timeout
-        async function fetchWithTimeout(url, timeout = 15000) {
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(new DOMException('TimeoutError', 'TimeoutError')), timeout);
-            
-            try {
-                const response = await fetch(url, {
-                    signal: controller.signal
-                });
-                clearTimeout(timeoutId);
-                return response;
-            } catch (error) {
-                clearTimeout(timeoutId);
-                throw error;
-            }
-        }
+        // ========== EVENT LISTENERS ==========
         
-        // Event Listeners
+        // Navigation
         prevBtn.addEventListener('click', () => {
             if (currentPage > 1) {
                 fetchManga(currentPage - 1);
@@ -1378,13 +1365,13 @@
             showListView();
         });
         
-        // Chapter navigation buttons
+        // Chapter navigation
         prevChapterBtn.addEventListener('click', goToPrevChapter);
         nextChapterBtn.addEventListener('click', goToNextChapter);
         prevChapterBtnBottom.addEventListener('click', goToPrevChapter);
         nextChapterBtnBottom.addEventListener('click', goToNextChapter);
         
-        // Handle browser back/forward buttons
+        // Browser history
         window.addEventListener('popstate', () => {
             const hash = window.location.hash;
             
@@ -1403,9 +1390,45 @@
             }
         });
         
-        // Initialize on load
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (currentView === 'reader') {
+                if (e.key === 'ArrowLeft' && !prevChapterBtn.disabled) {
+                    goToPrevChapter();
+                } else if (e.key === 'ArrowRight' && !nextChapterBtn.disabled) {
+                    goToNextChapter();
+                } else if (e.key === 'Escape') {
+                    showDetailView();
+                }
+            }
+        });
+        
+        // Swipe gestures
+        let touchStartX = 0;
+        
+        document.addEventListener('touchstart', (e) => {
+            if (currentView === 'reader') {
+                touchStartX = e.changedTouches[0].screenX;
+            }
+        }, { passive: true });
+        
+        document.addEventListener('touchend', (e) => {
+            if (currentView === 'reader') {
+                const touchEndX = e.changedTouches[0].screenX;
+                const diff = touchStartX - touchEndX;
+                const swipeThreshold = 50;
+                
+                if (diff > swipeThreshold && !nextChapterBtn.disabled) {
+                    goToNextChapter();
+                } else if (diff < -swipeThreshold && !prevChapterBtn.disabled) {
+                    goToPrevChapter();
+                }
+            }
+        }, { passive: true });
+        
+        // ========== INITIALIZE ==========
+        
         document.addEventListener('DOMContentLoaded', () => {
-            // Check URL hash for initial view
             const hash = window.location.hash;
             
             if (hash.startsWith('#chapter-')) {
@@ -1421,78 +1444,7 @@
             } else {
                 fetchManga();
             }
-            
-            // Setup Intersection Observer for lazy loading
-            if ('IntersectionObserver' in window) {
-                const imageObserver = new IntersectionObserver((entries) => {
-                    entries.forEach(entry => {
-                        if (entry.isIntersecting) {
-                            const img = entry.target;
-                            imageObserver.unobserve(img);
-                        }
-                    });
-                });
-                
-                // Observe images after they're added to DOM
-                const observeImages = () => {
-                    document.querySelectorAll('img[loading="lazy"]').forEach(img => {
-                        imageObserver.observe(img);
-                    });
-                };
-                
-                // Run after a short delay to ensure DOM is ready
-                setTimeout(observeImages, 500);
-            }
         });
-        
-        // Keyboard shortcuts for reader
-        document.addEventListener('keydown', (e) => {
-            if (currentView === 'reader') {
-                // Left arrow key for previous chapter
-                if (e.key === 'ArrowLeft' && !prevChapterBtn.disabled) {
-                    goToPrevChapter();
-                }
-                // Right arrow key for next chapter
-                else if (e.key === 'ArrowRight' && !nextChapterBtn.disabled) {
-                    goToNextChapter();
-                }
-                // Escape key to go back to detail
-                else if (e.key === 'Escape') {
-                    showDetailView();
-                }
-            }
-        });
-        
-        // Swipe gestures for mobile (simplified)
-        let touchStartX = 0;
-        let touchEndX = 0;
-        
-        document.addEventListener('touchstart', (e) => {
-            if (currentView === 'reader') {
-                touchStartX = e.changedTouches[0].screenX;
-            }
-        }, { passive: true });
-        
-        document.addEventListener('touchend', (e) => {
-            if (currentView === 'reader') {
-                touchEndX = e.changedTouches[0].screenX;
-                handleSwipe();
-            }
-        }, { passive: true });
-        
-        function handleSwipe() {
-            const swipeThreshold = 50;
-            const diff = touchStartX - touchEndX;
-            
-            // Swipe left (next chapter)
-            if (diff > swipeThreshold && !nextChapterBtn.disabled) {
-                goToNextChapter();
-            }
-            // Swipe right (previous chapter)
-            else if (diff < -swipeThreshold && !prevChapterBtn.disabled) {
-                goToPrevChapter();
-            }
-        }
     </script>
 </body>
 </html>
