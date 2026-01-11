@@ -433,7 +433,7 @@
             background: rgba(255, 107, 107, 0.3);
         }
         
-        /* Chapter Images */
+        /* Chapter Images - IMPROVED LAZY LOAD */
         .chapter-images {
             display: flex;
             flex-direction: column;
@@ -445,16 +445,22 @@
             position: relative;
             width: 100%;
             margin-bottom: 5px;
+            min-height: 100px;
+            background: linear-gradient(45deg, #2d3748, #4a5568);
+            border-radius: 8px;
+            overflow: hidden;
         }
         
         .chapter-image {
             width: 100%;
             height: auto;
             display: block;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-            background: linear-gradient(45deg, #2d3748, #4a5568);
-            min-height: 100px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .chapter-image.loaded {
+            opacity: 1;
         }
         
         .image-loading {
@@ -463,6 +469,7 @@
             left: 50%;
             transform: translate(-50%, -50%);
             color: #aaa;
+            z-index: 1;
         }
         
         .image-number {
@@ -474,6 +481,7 @@
             padding: 3px 10px;
             border-radius: 12px;
             font-size: 0.8rem;
+            z-index: 2;
         }
         
         .reader-progress {
@@ -804,6 +812,11 @@
         let currentMangaTitle = '';
         let currentChapterData = null;
         
+        // State untuk lazy loading
+        let imageObserver = null;
+        let loadedImagesCount = 0;
+        let totalImagesCount = 0;
+        
         // Elemen DOM
         const mainPageEl = document.getElementById('main-page');
         const detailPageEl = document.getElementById('detail-page');
@@ -924,6 +937,74 @@
             if (history.pushState) {
                 const newUrl = hash ? `#${hash}` : window.location.pathname;
                 history.pushState(null, '', newUrl);
+            }
+        }
+        
+        // ========== FUNGSI LAZY LOADING ==========
+        
+        function initLazyLoading() {
+            // Hapus observer lama jika ada
+            if (imageObserver) {
+                imageObserver.disconnect();
+            }
+            
+            // Reset counters
+            loadedImagesCount = 0;
+            
+            // Buat Intersection Observer baru
+            imageObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const img = entry.target;
+                        loadImage(img);
+                        imageObserver.unobserve(img);
+                    }
+                });
+            }, {
+                rootMargin: '50px', // Load gambar 50px sebelum masuk viewport
+                threshold: 0.1
+            });
+        }
+        
+        function loadImage(img) {
+            // Jika gambar sudah memiliki src (sudah diload), skip
+            if (img.dataset.src) {
+                const src = img.dataset.src;
+                img.src = src;
+                delete img.dataset.src;
+                
+                // Tambahkan event listener untuk tracking load
+                img.onload = () => handleImageLoad();
+                img.onerror = () => handleImageError(img);
+            }
+        }
+        
+        function handleImageLoad() {
+            loadedImagesCount++;
+            updateProgress();
+            
+            // Tambahkan class loaded untuk fade in effect
+            const img = event ? event.target : this;
+            img.classList.add('loaded');
+        }
+        
+        function handleImageError(img) {
+            loadedImagesCount++;
+            updateProgress();
+            
+            // Tampilkan placeholder untuk gambar error
+            img.style.filter = 'grayscale(100%)';
+            img.style.opacity = '0.5';
+            img.classList.add('loaded');
+        }
+        
+        function updateProgress() {
+            const progress = Math.round((loadedImagesCount / totalImagesCount) * 100);
+            readingProgressEl.style.width = `${progress}%`;
+            readerProgressText.textContent = `Memuat gambar (${loadedImagesCount}/${totalImagesCount})`;
+            
+            if (loadedImagesCount === totalImagesCount) {
+                readerProgressText.textContent = `Selesai memuat ${totalImagesCount} gambar`;
             }
         }
         
@@ -1220,38 +1301,13 @@
                 return;
             }
             
-            const totalImages = chapterData.images.length;
-            let loadedImages = 0;
+            totalImagesCount = chapterData.images.length;
+            loadedImagesCount = 0;
             
-            readerProgressText.textContent = `Memuat gambar (0/${totalImages})`;
+            readerProgressText.textContent = `Memuat gambar (0/${totalImagesCount})`;
+            initLazyLoading();
             
-            // Setup image loading tracker
-            window.trackImageLoad = function() {
-                loadedImages++;
-                const progress = Math.round((loadedImages / totalImages) * 100);
-                readingProgressEl.style.width = `${progress}%`;
-                readerProgressText.textContent = `Memuat gambar (${loadedImages}/${totalImages})`;
-                
-                if (loadedImages === totalImages) {
-                    readerProgressText.textContent = `Selesai memuat ${totalImages} gambar`;
-                }
-            };
-            
-            window.trackImageError = function(img) {
-                loadedImages++;
-                const progress = Math.round((loadedImages / totalImages) * 100);
-                readingProgressEl.style.width = `${progress}%`;
-                readerProgressText.textContent = `Memuat gambar (${loadedImages}/${totalImages})`;
-                
-                img.style.filter = 'grayscale(100%)';
-                img.style.opacity = '0.7';
-                
-                if (loadedImages === totalImages) {
-                    readerProgressText.textContent = `Selesai memuat ${totalImages} gambar`;
-                }
-            };
-            
-            // Create image containers
+            // Create image containers dengan data-src untuk lazy loading
             chapterData.images.forEach((imageUrl, index) => {
                 const imageNumber = index + 1;
                 const container = document.createElement('div');
@@ -1260,18 +1316,25 @@
                 
                 container.innerHTML = `
                     <img 
-                        src="${imageUrl}" 
+                        data-src="${imageUrl}" 
                         alt="Page ${imageNumber}" 
-                        class="chapter-image" 
-                        loading="lazy"
-                        onload="trackImageLoad()"
-                        onerror="trackImageError(this)"
+                        class="chapter-image"
                     >
-                    <div class="image-number">${imageNumber}/${totalImages}</div>
+                    <div class="image-number">${imageNumber}/${totalImagesCount}</div>
                 `;
                 
                 chapterImagesEl.appendChild(container);
+                
+                // Observasi gambar untuk lazy loading
+                const img = container.querySelector('img');
+                imageObserver.observe(img);
             });
+            
+            // Pre-load 3 gambar pertama untuk UX yang lebih baik
+            const firstImages = chapterImagesEl.querySelectorAll('img');
+            for (let i = 0; i < Math.min(3, firstImages.length); i++) {
+                loadImage(firstImages[i]);
+            }
         }
         
         // ========== NAVIGATION FUNCTIONS ==========
