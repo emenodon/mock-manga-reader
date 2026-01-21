@@ -26,7 +26,7 @@
         
         .container {
             max-width: 100%;
-            padding: 10px;
+            /* padding: 10px; */
             margin: 0 auto;
         }
         
@@ -422,7 +422,7 @@
         .reader-container {
             max-width: 800px;
             margin: 0 auto;
-            padding: 0 5px;
+            /* padding: 0 5px; */
         }
         
         .reader-header {
@@ -452,13 +452,14 @@
             align-items: center;
             gap: 5px;
             margin-top: 10px;
+            padding: 0 10px 0 10px;
         }
         
         .reader-btn {
             background: rgba(255, 255, 255, 0.1);
             border: none;
             color: #fff;
-            padding: 8px 12px;
+            padding: 12px 15px;
             border-radius: 6px;
             cursor: pointer;
             display: flex;
@@ -471,6 +472,7 @@
             justify-content: center;
             min-width: 0;
             max-width: 48%;
+            min-height: 44px;
         }
         
         .reader-btn:hover:not(:disabled) {
@@ -496,6 +498,29 @@
             display: flex;
             flex-direction: column;
             margin-bottom: 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+        
+        .chapter-images::before,
+        .chapter-images::after {
+            content: '';
+            position: fixed;
+            top: 0;
+            width: 20px;
+            height: 100vh;
+            z-index: 100;
+            pointer-events: none;
+        }
+        
+        .chapter-images::before {
+            left: 0;
+            background: linear-gradient(to right, rgba(255,107,107,0.1), transparent);
+        }
+        
+        .chapter-images::after {
+            right: 0;
+            background: linear-gradient(to left, rgba(255,107,107,0.1), transparent);
         }
         
         .chapter-image-container {
@@ -643,7 +668,7 @@
         
         @media (max-width: 500px) {
             .container {
-                padding: 8px;
+                /* padding: 8px; */
             }
             
             header {
@@ -671,8 +696,9 @@
             }
             
             .reader-btn {
-                padding: 7px 10px;
+                padding: 10px 12px;
                 font-size: 0.8rem;
+                min-height: 40px;
             }
             
             .nav-buttons {
@@ -1132,7 +1158,7 @@
             <p>Tidak ada manga yang ditemukan.</p>
         </div>
         
-        <div id="manga-grid" class="manga-grid"></div>
+        <div id="manga-grid" class="manga-grid" style="margin: 0 10px 0 10px;"></div>
         
         <div id="pagination" class="pagination" style="display: none;">
             <button id="prev-btn" disabled>
@@ -1159,7 +1185,7 @@
             </button>
         </div>
         
-        <div id="detail-content" class="manga-detail"></div>
+        <div id="detail-content" class="manga-detail" style="margin: 0 10px 0 10px;"></div>
     </div>
     
     <div class="container" id="reader-page">
@@ -1177,6 +1203,7 @@
         </div>
         
         <div id="reader-content" class="reader-container" style="display: none;">
+            <h6 style="text-align: center;color: dimgrey;font-style: italic;">(*use button or swipe Left/Right to change chapter)</h6>
             <div class="reader-controls" style="margin-bottom: 15px;">
                 <button id="prev-chapter-btn" class="reader-btn" disabled>
                     <i class="fas fa-chevron-left"></i> <span class="btn-text">Prev</span>
@@ -1225,6 +1252,17 @@
         let imageObserver = null;
         let loadedImagesCount = 0;
         let totalImagesCount = 0;
+        
+        let isChangingChapter = false;
+        let lastChapterChangeTime = 0;
+        const CHAPTER_CHANGE_COOLDOWN = 500;
+        
+        let touchStartX = 0;
+        let touchStartY = 0;
+        let touchEndX = 0;
+        let touchEndY = 0;
+        const MIN_SWIPE_DISTANCE = 50;
+        const MAX_VERTICAL_DEVIATION = 30;
         
         const mainPageEl = document.getElementById('main-page');
         const detailPageEl = document.getElementById('detail-page');
@@ -2027,22 +2065,38 @@
             if (nextChapterBtnBottom) nextChapterBtnBottom.disabled = !hasNextChapter;
         }
         
-        function showChapter(chapterSlug) {
-            currentChapterSlug = chapterSlug;
-            showReaderView();
-            fetchChapterImages(chapterSlug);
-        }
-        
         function goToNextChapter() {
-            if (currentChapterData && currentChapterData.next_chapter_slug) {
-                showChapter(currentChapterData.next_chapter_slug);
+            const now = Date.now();
+            if (!isChangingChapter && now - lastChapterChangeTime > CHAPTER_CHANGE_COOLDOWN) {
+                isChangingChapter = true;
+                lastChapterChangeTime = now;
+                if (currentChapterData && currentChapterData.next_chapter_slug) {
+                    showChapter(currentChapterData.next_chapter_slug);
+                }
+                setTimeout(() => {
+                    isChangingChapter = false;
+                }, CHAPTER_CHANGE_COOLDOWN);
             }
         }
         
         function goToPrevChapter() {
-            if (currentChapterData && currentChapterData.previous_chapter_slug) {
-                showChapter(currentChapterData.previous_chapter_slug);
+            const now = Date.now();
+            if (!isChangingChapter && now - lastChapterChangeTime > CHAPTER_CHANGE_COOLDOWN) {
+                isChangingChapter = true;
+                lastChapterChangeTime = now;
+                if (currentChapterData && currentChapterData.previous_chapter_slug) {
+                    showChapter(currentChapterData.previous_chapter_slug);
+                }
+                setTimeout(() => {
+                    isChangingChapter = false;
+                }, CHAPTER_CHANGE_COOLDOWN);
             }
+        }
+        
+        function showChapter(chapterSlug) {
+            currentChapterSlug = chapterSlug;
+            showReaderView();
+            fetchChapterImages(chapterSlug);
         }
         
         function showMangaDetail(slug) {
@@ -2274,27 +2328,35 @@
             }
         });
         
-        let touchStartX = 0;
-        
         document.addEventListener('touchstart', (e) => {
             if (currentView === 'reader') {
                 touchStartX = e.changedTouches[0].screenX;
+                touchStartY = e.changedTouches[0].screenY;
             }
         }, { passive: true });
         
         document.addEventListener('touchend', (e) => {
             if (currentView === 'reader') {
-                const touchEndX = e.changedTouches[0].screenX;
-                const diff = touchStartX - touchEndX;
-                const swipeThreshold = 50;
+                touchEndX = e.changedTouches[0].screenX;
+                touchEndY = e.changedTouches[0].screenY;
                 
-                if (diff > swipeThreshold && nextChapterBtn && !nextChapterBtn.disabled) {
-                    goToNextChapter();
-                } else if (diff < -swipeThreshold && prevChapterBtn && !prevChapterBtn.disabled) {
-                    goToPrevChapter();
+                const diffX = touchStartX - touchEndX;
+                const diffY = touchStartY - touchEndY;
+                const absDiffX = Math.abs(diffX);
+                const absDiffY = Math.abs(diffY);
+                
+                if (absDiffX > MIN_SWIPE_DISTANCE && absDiffX > absDiffY && absDiffY < MAX_VERTICAL_DEVIATION) {
+                    const swipeThreshold = 50;
+                    e.preventDefault();
+                    
+                    if (diffX > swipeThreshold && nextChapterBtn && !nextChapterBtn.disabled) {
+                        goToNextChapter();
+                    } else if (diffX < -swipeThreshold && prevChapterBtn && !prevChapterBtn.disabled) {
+                        goToPrevChapter();
+                    }
                 }
             }
-        }, { passive: true });
+        }, { passive: false });
         
         document.addEventListener('DOMContentLoaded', () => {
             const cachedData = getMangaListFromStorage();
