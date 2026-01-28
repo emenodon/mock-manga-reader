@@ -2212,11 +2212,11 @@
 
         function renderMangaDetail(manga) {
             if (!detailContentEl || !manga) return;
-
+        
             const thumbnail = manga.thumbnail || 'https://via.placeholder.com/250x350/2d3748/4a5568?text=No+Image';
             const rating = manga.rating || 'N/A';
             currentMangaTitle = manga.title || 'Unknown Manga';
-
+        
             let genresHtml = '';
             if (manga.genres && manga.genres.length > 0) {
                 genresHtml = manga.genres.map(genre => 
@@ -2225,7 +2225,7 @@
             } else {
                 genresHtml = '<span class="genre-tag">Tidak ada genre</span>';
             }
-
+        
             let chaptersHtml = '';
             if (manga.chapters && manga.chapters.length > 0) {
                 const sortedChapters = [...manga.chapters].sort((a, b) => {
@@ -2234,13 +2234,13 @@
                         const match = title.match(/(\d+(\.\d+)?)/);
                         return match ? parseFloat(match[1]) : 0;
                     };
-
+        
                     const numA = getChapterNumber(a.title);
                     const numB = getChapterNumber(b.title);
-
+        
                     return numB - numA;
                 });
-
+        
                 chaptersHtml = sortedChapters.map(chapter => {
                     const date = chapter.released_at ? 
                         new Date(chapter.released_at).toLocaleDateString('id-ID', {
@@ -2248,7 +2248,7 @@
                             month: 'short',
                             year: 'numeric'
                         }) : 'Tanggal tidak diketahui';
-
+        
                     return `
                         <div class="chapter-item" data-slug="${chapter.slug}">
                             <div class="chapter-title">${chapter.title || 'Chapter tanpa judul'}</div>
@@ -2264,6 +2264,10 @@
                 `;
             }
 
+            const isMangaInLibrary = isInLibrary(manga.slug);
+            const libraryButtonText = isMangaInLibrary ? 'In Library' : 'Add to Library';
+            const libraryButtonClass = isMangaInLibrary ? 'in-library' : '';
+        
             detailContentEl.innerHTML = `
                 <div class="manga-detail">
                     <div class="detail-header fade-in">
@@ -2292,8 +2296,8 @@
                                 ${genresHtml}
                             </div>
                             <div class="detail-actions">
-                                <button id="library-add-btn" class="reader-btn ${isInLibrary(manga.slug) ? 'in-library' : ''}" style="margin-top: 10px;">
-                                    <i class="fas fa-bookmark"></i> ${isInLibrary(manga.slug) ? 'In Library' : 'Add to Library'}
+                                <button id="library-add-btn" class="reader-btn ${libraryButtonClass}" style="margin-top: 10px;">
+                                    <i class="fas fa-bookmark"></i> ${libraryButtonText}
                                 </button>
                             </div>
                         </div>
@@ -2312,7 +2316,7 @@
                     </div>
                 </div>
             `;
-
+        
             const chapterItems = detailContentEl.querySelectorAll('.chapter-item[data-slug]');
             chapterItems.forEach(item => {
                 item.addEventListener('click', () => {
