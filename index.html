@@ -1522,6 +1522,18 @@
             const library = getLibrary();
             return library.find(item => item.slug === slug);
         }
+        
+        function formatChapterShort(title) {
+            if (!title) return 'Chapter ?';
+        
+            let match = title.match(/chapter\s*(\d+(\.\d+)?)/i);
+            if (match) return `Chapter ${match[1]}`;
+        
+            match = title.match(/(\d+(\.\d+)?)/);
+            if (match) return `Chapter ${match[1]}`;
+        
+            return 'Chapter ?';
+        }
 
         function updateLastRead(slug, chapterSlug, chapterTitle) {
             try {
@@ -1529,29 +1541,15 @@
                 const mangaIndex = library.findIndex(item => item.slug === slug);
         
                 if (mangaIndex !== -1) {
-                    let chapterNumber = null;
-                    if (chapterTitle) {
-                        const match = chapterTitle.match(/Chapter\s+(\d+(\.\d+)?)/i);
-                        if (match) {
-                            chapterNumber = parseFloat(match[1]);
-                        } else {
-                            const altMatch = chapterTitle.match(/(\d+(\.\d+)?)/);
-                            if (altMatch) {
-                                chapterNumber = parseFloat(altMatch[1]);
-                            }
-                        }
-                    }
-                    
                     library[mangaIndex].lastReadAt = Date.now();
                     library[mangaIndex].lastReadChapter = chapterSlug;
-                    library[mangaIndex].lastReadChapterTitle = chapterTitle;
-                    library[mangaIndex].lastReadChapterNumber = chapterNumber;
+                    library[mangaIndex].lastReadChapterTitle = formatChapterShort(chapterTitle);
+        
                     localStorage.setItem(LIBRARY_KEY, JSON.stringify(library));
                     return true;
                 }
                 return false;
             } catch (error) {
-                console.error('Error updating last read:', error);
                 return false;
             }
         }
@@ -1596,26 +1594,8 @@
         
                 const thumbnail = manga.thumbnail || 'https://via.placeholder.com/60x80/2d3748/4a5568?text=No+Image';
                 
-                let chapterDisplay = 'Not read yet';
-                let chapterNumber = null;
-                
-                if (manga.lastReadChapterTitle) {
-                    const match = manga.lastReadChapterTitle.match(/Chapter\s+(\d+(\.\d+)?)/i);
-                    if (match) {
-                        chapterNumber = parseFloat(match[1]);
-                        chapterDisplay = `Chapter ${chapterNumber}`;
-                    } else {
-                        const numberMatch = manga.lastReadChapterTitle.match(/(\d+(\.\d+)?)/);
-                        if (numberMatch) {
-                            chapterNumber = parseFloat(numberMatch[1]);
-                            chapterDisplay = `Chapter ${chapterNumber}`;
-                        } else {
-                            chapterDisplay = manga.lastReadChapterTitle.length > 15 
-                                ? manga.lastReadChapterTitle.substring(0, 15) + '...' 
-                                : manga.lastReadChapterTitle;
-                        }
-                    }
-                }
+                let chapterDisplay = manga.lastReadChapterTitle || 'Not read yet';
+                let chapterNumber = chapterDisplay.match(/(\d+(\.\d+)?)/)?.[1] || null;
 
                 let timeAgo = '';
                 if (manga.lastReadAt) {
