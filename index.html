@@ -2215,7 +2215,7 @@
 
             const thumbnail = manga.thumbnail || 'https://via.placeholder.com/250x350/2d3748/4a5568?text=No+Image';
             const rating = manga.rating || 'N/A';
-            const currentMangaTitle = manga.title || 'Unknown Manga';
+            currentMangaTitle = manga.title || 'Unknown Manga';
 
             let genresHtml = '';
             if (manga.genres && manga.genres.length > 0) {
